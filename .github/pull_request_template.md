@@ -27,8 +27,9 @@
 
 - After cloning the [repo](git@github.com:BitLipa/bitlipa-mobile-app.git)
 - Check out this branch by `branch here`
-- Run `yarn or npm install` to install the project dependencies
-- Run `action to be done`
+- Run `pip install -r requirements.txt` to install the project dependencies
+- Run `python manage.py test`
+- Run `python manage.py runserver`
 
 #### Checklist
 
