@@ -26,8 +26,8 @@ class ListUpdateUserAPIViewTestCase(APITestCase):
             "PIN": "1234"
         }
         token = jwt_encode({'email': 'johnsmith@gmail.com'})
-        self.client.headers.update({'Authorization': f'Bearer {token}'})
-        response = self.client.put(self.url, json=json.dumps(user_data), content_type='application/json')
+        headers = {'HTTP_Authorization': f'Bearer {token}'}
+        response = self.client.put(self.url, json=json.dumps(user_data), content_type='application/json', **headers)
         response_content = json.loads(response.content)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('data', response_content)
@@ -40,8 +40,8 @@ class ListUpdateUserAPIViewTestCase(APITestCase):
             "PIN": "1234"
         }
         token = jwt_encode({'email': 'aaa@gmail.com'})
-        self.client.headers.update({'Authorization': f'Bearer {token}'})
-        response = self.client.put(self.url, json=json.dumps(user_data), content_type='application/json')
+        headers = {'HTTP_Authorization': f'Bearer {token}'}
+        response = self.client.put(self.url, json=json.dumps(user_data), content_type='application/json', **headers)
         response_content = json.loads(response.content)
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
         self.assertEqual(error_messages.NOT_FOUND.format('user '), response_content.get('message'))
