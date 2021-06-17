@@ -54,3 +54,17 @@ class AuthViewSet(viewsets.ViewSet):
             return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
         except Exception as e:
             return http_response(status=status.HTTP_400_BAD_REQUEST, message=str(get_object_attr(e, 'message', e)))
+    
+    @action(methods=['post'], detail=False, url_path='login', url_name='login')
+    def login_user(self, request):
+        try:
+            serializer = UserSerializer(User.objects.login(**request.data))
+            userToken = jwt_encode({"email": request.data.get('email')}, expiration_hours=24)
+            return http_response(status=status.HTTP_200_OK, data={
+                "user": serializer.data,
+                "token": userToken
+            })
+        except User.DoesNotExist:
+            return http_response(status=status.HTTP_400_BAD_REQUEST, message=error_messages.WRONG_CREDENTAILS)
+        except Exception as e:
+            return http_response(status=status.HTTP_400_BAD_REQUEST, message=str(get_object_attr(e, 'message', e)))

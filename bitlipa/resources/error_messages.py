@@ -13,3 +13,6 @@ ACCESS_DENIED = "Access denied! Not enough permissions"
 # user
 PHONE_NUMBER_TAKEN = "user with this phone number{} already exists"
 EMAIL_TAKEN = "user with this email{} already exists"
+
+# login
+WRONG_CREDENTAILS = "wrong email or pin"

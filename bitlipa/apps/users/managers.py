@@ -1,5 +1,5 @@
 from django.contrib.auth.models import BaseUserManager
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.core.validators import RegexValidator
 
 
@@ -66,4 +66,17 @@ class UserManager(BaseUserManager):
             user.password = make_password(kwargs.get('password'))
 
         user.save(using=self._db)
+        return user
+
+    def login(self, **kwargs):
+        if not kwargs.get('email'):
+            raise ValueError(error_messages.REQUIRED.format('Email is '))
+
+        if not kwargs.get('PIN'):
+            raise ValueError(error_messages.REQUIRED.format('PIN is '))
+
+        user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+
+        if not check_password(kwargs.get("PIN"), user.pin):
+            raise ValueError(error_messages.WRONG_CREDENTAILS)
         return user
