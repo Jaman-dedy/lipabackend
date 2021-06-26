@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-def http_response(status=status.HTTP_200_OK, data=None, message=None) -> Response:
+def http_response(status=status.HTTP_200_OK, data=None, message=None, content_type=None) -> Response:
     response = {
         'status': status,
         'message': message,
@@ -15,4 +15,4 @@ def http_response(status=status.HTTP_200_OK, data=None, message=None) -> Respons
     if data is None:
         response.pop('data', None)
 
-    return Response(status=status, data=response)
+    return Response(status=status, data=response, content_type=content_type)

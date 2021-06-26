@@ -1,0 +1,16 @@
+{% extends 'base_email_template.html' %}
+
+
+{% block content %}
+<p style="text-align: center;">
+  Please, click on the button below to verify your account!!!
+  <br><br><br>
+<div style="text-align: center">
+  <a href={{verification_link}}
+    style="margin:35px 0;padding:15px 35px;background:#00343D;color:#ffffff;clear:both;border-radius:30px;text-decoration:none"
+    target='_blank'>
+    Verify account
+  </a>
+</div>
+</p>
+{% endblock %}

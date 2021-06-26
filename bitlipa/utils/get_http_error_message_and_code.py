@@ -4,7 +4,6 @@ from django.core import exceptions as core_exceptions
 from rest_framework import exceptions as drf_exceptions
 from django.db import IntegrityError
 
-from bitlipa import settings
 from bitlipa.resources import error_messages
 from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.split_camel_case_words import split_camel_case_words
@@ -35,5 +34,5 @@ def get_http_error_message_and_code(exc):
 
     return {
         "code": status.HTTP_500_INTERNAL_SERVER_ERROR,
-        "message": error_message if settings.DEBUG is True else error_messages.INTERNAL_SERVER_ERROR
+        "message": error_messages.INTERNAL_SERVER_ERROR
     }

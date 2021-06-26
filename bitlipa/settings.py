@@ -35,7 +35,7 @@ SECRET_KEY = env('SECRET_KEY', default='bitlipa-secret')
 DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default='*')
-
+API_URL = env('API_URL', default='http://localhost:8000/api/v1')
 
 # Application definition
 INSTALLED_APPS = [
@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # bitlipa
     'bitlipa.apps.authentication',
     'bitlipa.apps.users',
 ]
@@ -73,7 +72,7 @@ ROOT_URLCONF = 'bitlipa.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(Path(__file__).resolve().parent, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -159,3 +158,5 @@ EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default=SECRET_KEY)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='contact@bitlipa.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+
+EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@bitlipa.com')
