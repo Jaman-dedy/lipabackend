@@ -44,8 +44,9 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='login', url_name='login')
     def login_user(self, request):
-        serializer = UserSerializer(User.objects.login(**request.data))
-        user_token = JWTUtil.encode({"email": request.data.get('email')}, expiration_hours=24)
+        user = User.objects.login(**request.data)
+        serializer = UserSerializer(user)
+        user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, expiration_hours=24)
         return http_response(status=status.HTTP_200_OK, data={
             "user": serializer.data,
             "token": user_token

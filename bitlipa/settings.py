@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bitlipa.apps.authentication',
     'bitlipa.apps.users',
+    'bitlipa.apps.fiat_wallet',
 ]
 
 MIDDLEWARE = [

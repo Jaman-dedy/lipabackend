@@ -19,7 +19,7 @@ class User(models.Model):
     is_phone_verified = models.BooleanField(verbose_name="is phone verified", blank=False, null=False, default=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
-    deleted_at = models.DateTimeField(auto_now=True, verbose_name=_("deleted at"))
+    deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)
 
     objects = UserManager()
 

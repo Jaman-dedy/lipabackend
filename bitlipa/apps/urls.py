@@ -8,4 +8,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include('bitlipa.apps.authentication.urls')),
     path('', include('bitlipa.apps.users.urls')),
+    path('', include('bitlipa.apps.fiat_wallet.urls')),
 ]

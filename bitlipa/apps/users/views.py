@@ -8,6 +8,7 @@ from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.utils.jwt_util import JWTUtil
 from bitlipa.resources import error_messages
+from bitlipa.utils.is_auth import is_auth
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -17,13 +18,9 @@ class UserViewSet(viewsets.ViewSet):
 
     @action(methods=['put', 'get'], detail=False, url_path='*', url_name='list_update')
     def list_update(self, request):
-        token = request.headers.get("Authorization", default="")
-        if not token:
-            raise drf_exceptions.PermissionDenied(error_messages.AUTHENTICATION_REQUIRED)
-        if 'Bearer' not in token:
-            raise drf_exceptions.PermissionDenied(error_messages.WRONG_TOKEN)
-
-        decoded_token = JWTUtil.decode(token.replace('Bearer', '').strip())
+        is_auth(request)
+        token = request.headers.get("Authorization", default="").replace('Bearer', '').strip()
+        decoded_token = JWTUtil.decode(token)
 
         # list users
         if request.method == 'GET':
@@ -38,6 +35,7 @@ class UserViewSet(viewsets.ViewSet):
 
     # get one user
     def retrieve(self, request, pk=None):
+        is_auth(request)
         if not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
 
@@ -47,6 +45,7 @@ class UserViewSet(viewsets.ViewSet):
 
     # update user
     def update(self, request, pk=None):
+        is_auth(request)
         if pk and not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
 
