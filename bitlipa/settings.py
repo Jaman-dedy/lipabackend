@@ -32,7 +32,7 @@ if os.path.exists(f'{BASE_DIR}/.env'):
 SECRET_KEY = env('SECRET_KEY', default='bitlipa-secret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', default=True)
+DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default='*')
 
@@ -60,7 +60,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # custom middlewares
+    'bitlipa.middlewares.http_error_handler.HTTPErrorHandler',
 ]
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'bitlipa.utils.http_error_handler.http_error_handler'
+}
 
 ROOT_URLCONF = 'bitlipa.urls'
 

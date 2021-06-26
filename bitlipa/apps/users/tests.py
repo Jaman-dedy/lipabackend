@@ -8,7 +8,7 @@ from bitlipa.resources import error_messages
 from bitlipa.apps.users.models import User
 
 
-from bitlipa.utils.jwt import encode as jwt_encode
+from bitlipa.utils.jwt_util import JWTUtil
 
 
 class ListUpdateUserAPIViewTestCase(APITestCase):
@@ -25,7 +25,7 @@ class ListUpdateUserAPIViewTestCase(APITestCase):
             "phonenumber": "+9999999999",
             "PIN": "1234"
         }
-        token = jwt_encode({'email': 'johnsmith@gmail.com'})
+        token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
         headers = {'HTTP_Authorization': f'Bearer {token}'}
         response = self.client.put(self.url, json=json.dumps(user_data), content_type='application/json', **headers)
         response_content = json.loads(response.content)
@@ -39,9 +39,9 @@ class ListUpdateUserAPIViewTestCase(APITestCase):
             "phonenumber": "+9999999999",
             "PIN": "1234"
         }
-        token = jwt_encode({'email': 'aaa@gmail.com'})
+        token = JWTUtil.encode({'email': 'aaa@gmail.com'})
         headers = {'HTTP_Authorization': f'Bearer {token}'}
         response = self.client.put(self.url, json=json.dumps(user_data), content_type='application/json', **headers)
         response_content = json.loads(response.content)
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
-        self.assertEqual(error_messages.NOT_FOUND.format('user '), response_content.get('message'))
+        self.assertEqual(error_messages.NOT_FOUND.format('User '), response_content.get('message'))

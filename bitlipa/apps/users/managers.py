@@ -1,5 +1,6 @@
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.hashers import make_password, check_password
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
 
@@ -11,7 +12,7 @@ class UserManager(BaseUserManager):
         user = self.model()
 
         if not kwargs.get('email'):
-            raise ValueError(error_messages.REQUIRED.format('Email is '))
+            raise ValidationError(error_messages.REQUIRED.format('Email is '))
 
         user.email = self.normalize_email(kwargs.get('email'))
         user.is_email_verified = True
@@ -22,13 +23,13 @@ class UserManager(BaseUserManager):
         user = self.model()
 
         if not kwargs.get('email'):
-            raise ValueError(error_messages.REQUIRED.format('Email is '))
+            raise ValidationError(error_messages.REQUIRED.format('Email is '))
 
         if not kwargs.get('phonenumber'):
-            raise ValueError(error_messages.REQUIRED.format('Phone number is '))
+            raise ValidationError(error_messages.REQUIRED.format('Phone number is '))
 
         if not kwargs.get('PIN'):
-            raise ValueError(error_messages.REQUIRED.format('PIN is '))
+            raise ValidationError(error_messages.REQUIRED.format('PIN is '))
 
         user.email = self.normalize_email(kwargs.get('email'))
         phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message=error_messages.WRONG_PHONE_NUMBER)
@@ -70,13 +71,13 @@ class UserManager(BaseUserManager):
 
     def login(self, **kwargs):
         if not kwargs.get('email'):
-            raise ValueError(error_messages.REQUIRED.format('Email is '))
+            raise ValidationError(error_messages.REQUIRED.format('Email is '))
 
         if not kwargs.get('PIN'):
-            raise ValueError(error_messages.REQUIRED.format('PIN is '))
+            raise ValidationError(error_messages.REQUIRED.format('PIN is '))
 
         user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
 
         if not check_password(kwargs.get("PIN"), user.pin):
-            raise ValueError(error_messages.WRONG_CREDENTAILS)
+            raise ValidationError(error_messages.WRONG_CREDENTAILS)
         return user

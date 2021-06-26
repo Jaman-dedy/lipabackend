@@ -62,11 +62,12 @@ class UserRegistrationAPIViewTestCase(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(error_messages.WRONG_PHONE_NUMBER, response_content.get('message'))
 
+
 class UserLoginAPIViewTestCase(APITestCase):
     def setUp(self) -> None:
         self.signup_url = reverse('auth-signup')
         self.login_url = reverse('auth-login')
-    
+
     def test_user_login(self):
         user_data = {
             "email": "johnsmith@gmail.com",
@@ -94,7 +95,7 @@ class UserLoginAPIViewTestCase(APITestCase):
         self.assertIn('message', response_content)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(error_messages.REQUIRED.format('Email is '), response_content.get('message'))
-    
+
     def test_user_login_pin_required(self):
         user_data = {
             "email": "johnsmith@gmail.com",
