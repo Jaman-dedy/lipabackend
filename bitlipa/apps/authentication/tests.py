@@ -1,9 +1,11 @@
 import json
-
+from django.contrib.auth.hashers import make_password
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from bitlipa.apps.users.models import User
+from bitlipa.utils.jwt_util import JWTUtil
 from bitlipa.resources import error_messages
 
 
@@ -43,6 +45,7 @@ class UserRegistrationAPIViewTestCase(APITestCase):
             "phonenumber": "",
             "PIN": "1234"
         }
+
         response = self.client.post(self.url, json.dumps(user_data), content_type='application/json')
         response_content = json.loads(response.content)
         self.assertIn('message', response_content)
@@ -69,13 +72,14 @@ class UserLoginAPIViewTestCase(APITestCase):
         self.login_url = reverse('auth-login')
 
     def test_user_login(self):
-        user_data = {
-            "email": "johnsmith@gmail.com",
-            "password": "Password@123",
-            "phonenumber": "+9999999999",
-            "PIN": "1234"
-        }
-        response = self.client.post(self.signup_url, json.dumps(user_data), content_type='application/json')
+        User(email="johnsmith@gmail.com",
+             password="Password@123",
+             phonenumber="+9999999999",
+             pin=make_password("1234"),
+             is_email_verified=True,
+             is_phone_verified=True,
+             ).save()
+
         user_login = {
             "email": "johnsmith@gmail.com",
             "PIN": "1234"
@@ -106,3 +110,105 @@ class UserLoginAPIViewTestCase(APITestCase):
         self.assertIn('message', response_content)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(error_messages.REQUIRED.format('PIN is '), response_content.get('message'))
+
+
+class UserVerifyEmailAPIViewTestCase(APITestCase):
+
+    def test_verify_email(self):
+        token = JWTUtil.encode({'email': 'johnsmith2@example.com', "from_email": True})
+        url = reverse('auth-verify_email', args=[token])
+        response = self.client.get(url)
+
+        response_content = json.loads(response.content)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertIn('data', response_content)
+        self.assertEqual(True, response_content.get('data').get('is_email_verified'))
+
+    def test_verify_wrong_token(self):
+        User(email="johnsmith2@example.com",
+             password="Password@123",
+             phonenumber="+9999999999",
+             pin=make_password("1234"),
+             is_email_verified=False,
+             is_phone_verified=False,
+             ).save()
+
+        token = JWTUtil.encode({'email': 'johnsmith2@example.com', "from_email": False})
+        url = reverse('auth-verify_email', args=[token])
+        response = self.client.get(url)
+
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+        response_content = json.loads(response.content)
+        self.assertEqual(error_messages.WRONG_TOKEN, response_content.get('message'))
+
+    def test_verify_existing_email(self):
+        User(email="johnsmith2@example.com",
+             password="Password@123",
+             phonenumber="+9999999999",
+             pin=make_password("1234"),
+             is_email_verified=False,
+             is_phone_verified=False,
+             ).save()
+
+        token = JWTUtil.encode({'email': 'johnsmith2@example.com', "from_email": True})
+        url = reverse('auth-verify_email', args=[token])
+        response = self.client.get(url)
+
+        self.assertEqual(status.HTTP_409_CONFLICT, response.status_code)
+        response_content = json.loads(response.content)
+        self.assertEqual(error_messages.CONFLICT.format('johnsmith2@example.com '), response_content.get('message'))
+
+
+class UserVerifySMSAPIViewTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.url = reverse('auth-verify_phonenumber')
+
+    def test_verify_sms(self):
+
+        User(email="johnsmith@example.com",
+             password="Password@123",
+             phonenumber="+9999999999",
+             pin=make_password("1234"),
+             is_email_verified=False,
+             is_phone_verified=False,
+             otp="123456"
+             ).save()
+
+        token = JWTUtil.encode({'email': 'johnsmith@example.com'})
+
+        user_data = {
+            "phonenumber": "+9999999999",
+            "OTP": "123456"
+        }
+
+        token = JWTUtil.encode({'email': 'johnsmith@example.com'})
+        headers = {'HTTP_Authorization': f'Bearer {token}'}
+        response = self.client.put(self.url, data=json.dumps(user_data), content_type='application/json', **headers)
+        response_content = json.loads(response.content)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertIn('data', response_content)
+        self.assertEqual(True, response_content.get('data').get('is_phone_verified'))
+
+    def test_verify_sms_wrong_token(self):
+        User(email="johnsmith@example.com",
+             password="Password@123",
+             phonenumber="+9999999999",
+             pin=make_password("1234"),
+             is_email_verified=False,
+             is_phone_verified=False,
+             otp="123456"
+             ).save()
+
+        token = JWTUtil.encode({'email': 'johnsmith@example.com'})
+
+        user_data = {
+            "phonenumber": "+9999999999",
+            "OTP": "123457"
+        }
+
+        token = JWTUtil.encode({'email': 'johnsmith@example.com'})
+        headers = {'HTTP_Authorization': f'Bearer {token}'}
+        response = self.client.put(self.url, data=json.dumps(user_data), content_type='application/json', **headers)
+        response_content = json.loads(response.content)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(error_messages.WRONG_OTP, response_content.get('message'))

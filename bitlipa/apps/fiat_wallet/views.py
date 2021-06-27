@@ -1,14 +1,13 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
-from .models import FiatWallet, FiatWalletManager
+from .models import FiatWallet
 from .serializers import FiatWalletSerializer
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
-from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.http_response import http_response
-from bitlipa.resources import error_messages, success_messages
+from bitlipa.resources import error_messages
 from bitlipa.utils.jwt_util import JWTUtil
-from bitlipa.utils.is_auth import is_auth
+from bitlipa.utils.auth_util import AuthUtil
 
 
 class WalletViewSet(viewsets.ViewSet):
@@ -26,15 +25,14 @@ class WalletViewSet(viewsets.ViewSet):
             return self.create_wallet(request)
 
     def create_wallet(self, request):
-        is_auth(request)
-        token = request.headers.get("Authorization", default="").replace('Bearer', '').strip()
-        decoded_token = JWTUtil.decode(token)
+        AuthUtil.is_auth(request)
+        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
         serializer = FiatWalletSerializer(FiatWallet.objects.create_wallet(decoded_token, **request.data))
 
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def list_wallets(self, request):
-        is_auth(request)
+        AuthUtil.is_auth(request)
 
         fiat_wallet = FiatWallet.objects.all().order_by('-created_at')
         serializer = FiatWalletSerializer(fiat_wallet, many=True)
@@ -46,9 +44,8 @@ class WalletViewSet(viewsets.ViewSet):
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('wallet '))
 
-        is_auth(request)
-        token = request.headers.get("Authorization", default="").replace('Bearer', '').strip()
-        decoded_token = JWTUtil.decode(token)
+        AuthUtil.is_auth(request)
+        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
 
         if decoded_token is None:
             return http_response(status=status.HTTP_400_BAD_REQUEST, message=error_messages.WRONG_TOKEN)
@@ -62,9 +59,8 @@ class WalletViewSet(viewsets.ViewSet):
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('wallet '))
 
-        is_auth(request)
-        token = request.headers.get("Authorization", default="").replace('Bearer', '').strip()
-        decoded_token = JWTUtil.decode(token)
+        AuthUtil.is_auth(request)
+        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
 
         if decoded_token is None:
             return http_response(status=status.HTTP_400_BAD_REQUEST, message=error_messages.WRONG_TOKEN)
@@ -77,7 +73,7 @@ class WalletViewSet(viewsets.ViewSet):
     def delete(self, request, pk=None):
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('user '))
-        is_auth(request)
+        AuthUtil.is_auth(request)
 
         fiat_wallet = FiatWallet.objects.delete(id=pk)
         serializer = FiatWalletSerializer(fiat_wallet)

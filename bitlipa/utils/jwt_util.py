@@ -1,17 +1,18 @@
 import jwt
 import datetime
+from django.conf import settings
 from rest_framework import exceptions as drf_exceptions
 
-from bitlipa import settings
 from bitlipa.resources import error_messages
 
 
 class JWTUtil:
     def encode(payload: dict, expiration_hours: int = 24) -> str:
         try:
-            return jwt.encode({
+            token = jwt.encode({
                 **payload, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=expiration_hours)
             }, settings.SECRET_KEY, algorithm="HS256")
+            return str(token, 'utf-8')
 
         except jwt.PyJWTError:
             raise drf_exceptions.PermissionDenied(error_messages.INTERNAL_SERVER_ERROR)

@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 
 
 from bitlipa.resources import error_messages
+from bitlipa.utils.otp_util import OTPUtil
 
 
 class UserManager(BaseUserManager):
@@ -16,6 +17,30 @@ class UserManager(BaseUserManager):
 
         user.email = self.normalize_email(kwargs.get('email'))
         user.is_email_verified = True
+        user.save(using=self._db)
+        return user
+
+    def save_or_verify_phonenumber(self, id=None, email=None, **kwargs):
+        user = self.model.objects.get(email=email) if email else self.model.objects.get(id=id)
+
+        if not kwargs.get('phonenumber'):
+            raise ValidationError(error_messages.REQUIRED.format('Phone number is '))
+
+        phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message=error_messages.WRONG_PHONE_NUMBER)
+        phone_regex(kwargs.get('phonenumber'))
+
+        if kwargs.get('phonenumber') and not kwargs.get('otp') and not user.phonenumber:
+            user.phonenumber = kwargs.get('phonenumber')
+
+        if kwargs.get('OTP') and kwargs.get('OTP') != user.otp or kwargs.get('phonenumber') != user.phonenumber:
+            raise ValidationError(error_messages.WRONG_OTP)
+        elif kwargs.get('OTP'):
+            user.otp = None
+            user.is_phone_verified = True
+
+        if not kwargs.get('OTP'):
+            user.otp = OTPUtil.generate()
+
         user.save(using=self._db)
         return user
 
@@ -44,17 +69,12 @@ class UserManager(BaseUserManager):
         if kwargs.get('password'):
             user.password = make_password(kwargs.get('password'))
 
+        user.is_email_verified = True
         user.save(using=self._db)
         return user
 
     def update(self, id=None, email=None, **kwargs):
         user = self.model.objects.get(email=email) if email else self.model.objects.get(id=id)
-
-        # TODO: add OTP verification
-        if kwargs.get('phonenumber'):
-            phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message=error_messages.WRONG_PHONE_NUMBER)
-            phone_regex(kwargs.get('phonenumber'))
-            user.phonenumber = kwargs.get('phonenumber')
 
         user.first_name = kwargs.get('first_name') or user.first_name
         user.middle_name = kwargs.get('middle_name') or user.middle_name
@@ -65,6 +85,11 @@ class UserManager(BaseUserManager):
 
         if not user.password and kwargs.get('password'):
             user.password = make_password(kwargs.get('password'))
+
+        if not user.phonenumber and kwargs.get('phonenumber'):
+            phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message=error_messages.WRONG_PHONE_NUMBER)
+            phone_regex(kwargs.get('phonenumber'))
+            user.phonenumber = kwargs.get('phonenumber')
 
         user.save(using=self._db)
         return user
@@ -77,6 +102,12 @@ class UserManager(BaseUserManager):
             raise ValidationError(error_messages.REQUIRED.format('PIN is '))
 
         user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+
+        if user.is_email_verified is False:
+            raise ValidationError(error_messages.EMAIL_NOT_VERIFIED)
+
+        if user.is_phone_verified is False:
+            raise ValidationError(error_messages.PHONE_NOT_VERIFIED)
 
         if not check_password(kwargs.get("PIN"), user.pin):
             raise ValidationError(error_messages.WRONG_CREDENTAILS)

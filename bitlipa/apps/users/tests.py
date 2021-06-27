@@ -6,8 +6,6 @@ from rest_framework.test import APITestCase, APIClient
 
 from bitlipa.resources import error_messages
 from bitlipa.apps.users.models import User
-
-
 from bitlipa.utils.jwt_util import JWTUtil
 
 

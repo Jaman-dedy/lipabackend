@@ -29,8 +29,9 @@ psycopg2==2.8.6
 py-log==2.5
 pycodestyle==2.7.0
 pyflakes==2.3.1
-PyJWT==2.1.0
+PyJWT==1.7.1
 pymongo==3.5.1
+pyotp==2.6.0
 pytz==2021.1
 PyYAML==5.4.1
 requests==2.25.1
@@ -38,6 +39,7 @@ six==1.16.0
 sqlparse==0.4.1
 toml==0.10.2
 tomorrow3==1.1.0
+twilio==6.60.0
 urllib3==1.26.5
 virtualenv==20.4.7
 whitenoise==5.2.0

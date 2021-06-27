@@ -1,14 +1,18 @@
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.core.mail import send_mail
 from django.template import loader
+from rest_framework import exceptions as drf_exceptions
 
-from bitlipa import settings
 from bitlipa.resources import success_messages
 from bitlipa.utils.jwt_util import JWTUtil
-from bitlipa.utils.http_response import http_response
 from bitlipa.apps.users.models import User
 from bitlipa.apps.users.serializers import UserSerializer
+from bitlipa.resources import error_messages
+from bitlipa.utils.http_response import http_response
+from bitlipa.utils.send_sms import send_sms
+from bitlipa.utils.auth_util import AuthUtil
 
 
 class AuthViewSet(viewsets.ViewSet):
@@ -18,23 +22,35 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='send-email-verification-link', url_name='send_email_verification_link')
     def send_email_verification_link(self, request):
-        token = JWTUtil.encode({"email": request.data.get('email')}, expiration_hours=24)
-        content = loader.render_to_string('verify_email.html', {'verification_link': f'{settings.API_URL}/auth/verify-email/{token}/'})
+        email_token = JWTUtil.encode({"email": request.data.get('email'), "from_email": True}, expiration_hours=24)
+        content = loader.render_to_string('verify_email.html', {'verification_link': f'{settings.API_URL}/auth/verify-email/{email_token}/'})
         send_mail('Verify account', '', settings.EMAIL_SENDER, [request.data.get('email')], fail_silently=False, html_message=content)
-        return http_response(status=status.HTTP_201_CREATED, message=success_messages.EMAIL_SENT)
 
-    @action(methods=['get'], detail=False, url_path=r'verify-email/(?P<token>.*)', url_name='verify-email')
+        return http_response(status=status.HTTP_201_CREATED, message=success_messages.EMAIL_SENT, data={
+            "token": JWTUtil.encode({"email": request.data.get('email')}, expiration_hours=24)
+        })
+
+    @action(methods=['get'], detail=False, url_path=r'verify-email/(?P<token>.*)', url_name='verify_email')
     def verify_email(self, request, *args, **kwargs):
         decoded_token = JWTUtil.decode(kwargs.get('token'))
 
-        serializer = UserSerializer(User.objects.save_email(**decoded_token))
+        if decoded_token.get('from_email') is not True:
+            raise drf_exceptions.PermissionDenied(error_messages.WRONG_TOKEN)
 
+        serializer = UserSerializer(User.objects.save_email(**decoded_token))
         return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, data=serializer.data)
 
-    # TODO: Implement send SMS
-    @action(methods=['get'], detail=False, url_path='verify-phonenumber', url_name='verify-phonenumber')
+    @action(methods=['put'], detail=False, url_path='verify-phonenumber', url_name='verify_phonenumber')
     def verify_phonenumber(self, request):
-        return http_response(status=status.HTTP_201_CREATED, message='sent')
+        AuthUtil.is_auth(request)
+        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
+
+        user = User.objects.save_or_verify_phonenumber(email=decoded_token.get('email'), **request.data)
+        if user.otp:
+            send_sms(user.phonenumber, message=user.otp)
+
+        serializer = UserSerializer(user)
+        return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, data=serializer.data)
 
     @action(methods=['post'], detail=False, url_path='signup', url_name='signup')
     def create_user(self, request):

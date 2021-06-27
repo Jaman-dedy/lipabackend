@@ -161,3 +161,13 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='contact@bitlipa.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 
 EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@bitlipa.com')
+
+
+TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID", default="")
+TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN", default="")
+TWILIO_NUMBER = env("TWILIO_NUMBER", default="")
+SMS_BROADCAST_TO_NUMBERS = [
+    "",  # use the format +19735551234
+    "",
+    "",
+]

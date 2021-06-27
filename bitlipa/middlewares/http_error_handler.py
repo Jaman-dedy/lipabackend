@@ -1,7 +1,7 @@
+from django.conf import settings
 from rest_framework.renderers import JSONRenderer
 from rest_framework import status
 
-from bitlipa import settings
 from bitlipa.utils.http_response import http_response
 from bitlipa.utils.get_http_error_message_and_code import get_http_error_message_and_code
 from bitlipa.resources import error_messages
