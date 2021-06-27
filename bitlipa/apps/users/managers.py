@@ -100,8 +100,26 @@ class UserManager(BaseUserManager):
 
         if not kwargs.get('PIN'):
             raise ValidationError(error_messages.REQUIRED.format('PIN is '))
-
         user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+
+        if not kwargs.get('device_id'):
+            raise ValidationError(error_messages.REQUIRED.format('Device id is '))
+
+        if kwargs.get('device_id') and not user.device_id:
+            user.device_id = kwargs.get('device_id')
+            user.save(using=self._db)
+
+        if kwargs.get('OTP') and user.otp and kwargs.get('OTP') != user.otp :
+            raise ValidationError(error_messages.WRONG_OTP)
+        elif kwargs.get('OTP') and user.otp:
+            user.otp = None
+            user.device_id = kwargs.get('device_id')
+            user.save(using=self._db)
+
+        if kwargs.get('device_id') != user.device_id :
+            user.otp = OTPUtil.generate()
+            user.save(using=self._db)
+            return user
 
         if user.is_email_verified is False:
             raise ValidationError(error_messages.EMAIL_NOT_VERIFIED)

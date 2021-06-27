@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase
 from bitlipa.apps.users.models import User
 from bitlipa.utils.jwt_util import JWTUtil
 from bitlipa.resources import error_messages
+from bitlipa.utils.test_util import TestUtil
 
 
 class UserRegistrationAPIViewTestCase(APITestCase):
@@ -72,17 +73,12 @@ class UserLoginAPIViewTestCase(APITestCase):
         self.login_url = reverse('auth-login')
 
     def test_user_login(self):
-        User(email="johnsmith@gmail.com",
-             password="Password@123",
-             phonenumber="+9999999999",
-             pin=make_password("1234"),
-             is_email_verified=True,
-             is_phone_verified=True,
-             ).save()
+        TestUtil.create_user()
 
         user_login = {
-            "email": "johnsmith@gmail.com",
-            "PIN": "1234"
+            "email": "johnsmith@example.com",
+            "PIN": "1234",
+            "device_id": "*#*#8255#*#*",
         }
         response = self.client.post(self.login_url, json.dumps(user_login), content_type='application/json')
         response_content = json.loads(response.content)
@@ -92,7 +88,8 @@ class UserLoginAPIViewTestCase(APITestCase):
     def test_user_login_email_required(self):
         user_data = {
             "email": "",
-            "PIN": "1234"
+            "PIN": "1234",
+            "device_id": "#*#8255#*#*",
         }
         response = self.client.post(self.login_url, json.dumps(user_data), content_type='application/json')
         response_content = json.loads(response.content)
@@ -103,13 +100,27 @@ class UserLoginAPIViewTestCase(APITestCase):
     def test_user_login_pin_required(self):
         user_data = {
             "email": "johnsmith@gmail.com",
-            "PIN": ""
+            "PIN": "",
+            "device_id": "#*#8255#*#*",
         }
         response = self.client.post(self.login_url, json.dumps(user_data), content_type='application/json')
         response_content = json.loads(response.content)
         self.assertIn('message', response_content)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(error_messages.REQUIRED.format('PIN is '), response_content.get('message'))
+
+    def test_user_login_pin_device_id_required(self):
+        TestUtil.create_user()
+        user_data = {
+            "email": "johnsmith@example.com",
+            "PIN": "1234",
+            "device_id": "",
+        }
+        response = self.client.post(self.login_url, json.dumps(user_data), content_type='application/json')
+        response_content = json.loads(response.content)
+        self.assertIn('message', response_content)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(error_messages.REQUIRED.format('Device id is '), response_content.get('message'))
 
 
 class UserVerifyEmailAPIViewTestCase(APITestCase):

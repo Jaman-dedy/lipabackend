@@ -61,6 +61,10 @@ class AuthViewSet(viewsets.ViewSet):
     @action(methods=['post'], detail=False, url_path='login', url_name='login')
     def login_user(self, request):
         user = User.objects.login(**request.data)
+        if user.otp:
+            content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
+            send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], fail_silently=False, html_message=content)
+            return http_response(status=status.HTTP_200_OK, message=success_messages.CONFIRM_LOGIN)
         serializer = UserSerializer(user)
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, expiration_hours=24)
         return http_response(status=status.HTTP_200_OK, data={

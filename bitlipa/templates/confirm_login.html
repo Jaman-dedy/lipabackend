@@ -1,0 +1,14 @@
+{% extends 'base_email_template.html' %}
+
+
+{% block content %}
+<p style="text-align: center;">
+  Please, enter this verification code to login!
+  <br><br><br>
+<div style="text-align: center">
+  <h1>
+   {{verification_code}}
+  </h1>
+</div>
+</p>
+{% endblock %}
