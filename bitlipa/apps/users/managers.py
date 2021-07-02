@@ -6,6 +6,7 @@ from django.core.validators import RegexValidator
 
 from bitlipa.resources import error_messages
 from bitlipa.utils.otp_util import OTPUtil
+from bitlipa.utils.validator import Validator
 
 
 class UserManager(BaseUserManager):
@@ -26,8 +27,7 @@ class UserManager(BaseUserManager):
         if not kwargs.get('phonenumber'):
             raise ValidationError(error_messages.REQUIRED.format('Phone number is '))
 
-        phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message=error_messages.WRONG_PHONE_NUMBER)
-        phone_regex(kwargs.get('phonenumber'))
+        Validator.validate_phonenumber(kwargs.get('phonenumber'))
 
         if kwargs.get('phonenumber') and not kwargs.get('otp') and not user.phonenumber:
             user.phonenumber = kwargs.get('phonenumber')

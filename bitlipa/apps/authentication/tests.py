@@ -1,3 +1,4 @@
+import time
 import json
 from django.contrib.auth.hashers import make_password
 from django.urls import reverse
@@ -151,6 +152,24 @@ class UserVerifyEmailAPIViewTestCase(APITestCase):
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
         response_content = json.loads(response.content)
         self.assertEqual(error_messages.WRONG_TOKEN, response_content.get('message'))
+
+    def test_verify_expired_token(self):
+        User(email="johnsmith2@example.com",
+             password="Password@123",
+             phonenumber="+9999999999",
+             pin=make_password("1234"),
+             is_email_verified=False,
+             is_phone_verified=False,
+             ).save()
+
+        token = JWTUtil.encode({'email': 'johnsmith2@example.com', "from_email": True}, expiration_hours=1 / 3600)
+        time.sleep(2)  # sleep for 2 seconds
+        url = reverse('auth-verify_email', args=[token])
+        response = self.client.get(url)
+        response_content = json.loads(response.content)
+
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+        self.assertEqual(error_messages.TOKEN_EXPIRED, response_content.get('message'))
 
     def test_verify_existing_email(self):
         User(email="johnsmith2@example.com",

@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from django.core.mail import send_mail
 from django.template import loader
 from rest_framework import exceptions as drf_exceptions
+from django.core import exceptions as core_exceptions
 
 from bitlipa.resources import success_messages
 from bitlipa.utils.jwt_util import JWTUtil
@@ -13,6 +14,7 @@ from bitlipa.resources import error_messages
 from bitlipa.utils.http_response import http_response
 from bitlipa.utils.send_sms import send_sms
 from bitlipa.utils.auth_util import AuthUtil
+from bitlipa.utils.validator import Validator
 
 
 class AuthViewSet(viewsets.ViewSet):
@@ -22,12 +24,16 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='send-email-verification-link', url_name='send_email_verification_link')
     def send_email_verification_link(self, request):
-        email_token = JWTUtil.encode({"email": request.data.get('email'), "from_email": True}, expiration_hours=24)
+        if not request.data.get('email'):
+            raise core_exceptions.ValidationError(error_messages.REQUIRED.format('Email is '))
+
+        email = Validator.validate_email(request.data.get('email'))
+        email_token = JWTUtil.encode({"email": email, "from_email": True}, expiration_hours=24)
         content = loader.render_to_string('verify_email.html', {'verification_link': f'{settings.API_URL}/auth/verify-email/{email_token}/'})
-        send_mail('Verify account', '', settings.EMAIL_SENDER, [request.data.get('email')], fail_silently=False, html_message=content)
+        send_mail('Verify account', '', settings.EMAIL_SENDER, [email], fail_silently=False, html_message=content)
 
         return http_response(status=status.HTTP_201_CREATED, message=success_messages.EMAIL_SENT, data={
-            "token": JWTUtil.encode({"email": request.data.get('email')}, expiration_hours=24)
+            "token": JWTUtil.encode({"email": email}, expiration_hours=24)
         })
 
     @action(methods=['get'], detail=False, url_path=r'verify-email/(?P<token>.*)', url_name='verify_email')

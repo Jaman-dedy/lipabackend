@@ -12,3 +12,12 @@ class TestUtil:
              is_email_verified=True,
              is_phone_verified=True,
              ).save()
+
+    def create_non_verified_user():
+        User(email="johnsmith2@example.com",
+             password="Password@123",
+             phonenumber="+8888888888",
+             pin=make_password("1234"),
+             is_email_verified=True,
+             is_phone_verified=True,
+             ).save()
