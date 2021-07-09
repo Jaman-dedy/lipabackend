@@ -11,8 +11,8 @@ from bitlipa.utils.jwt_util import JWTUtil
 from bitlipa.apps.users.models import User
 from bitlipa.apps.users.serializers import UserSerializer
 from bitlipa.resources import error_messages
+from bitlipa.utils.get_http_error_message_and_code import get_http_error_message_and_code
 from bitlipa.utils.http_response import http_response
-from bitlipa.utils.send_sms import send_sms
 from bitlipa.utils.auth_util import AuthUtil
 from bitlipa.utils.validator import Validator
 
@@ -38,23 +38,31 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['get'], detail=False, url_path=r'verify-email/(?P<token>.*)', url_name='verify_email')
     def verify_email(self, request, *args, **kwargs):
-        decoded_token = JWTUtil.decode(kwargs.get('token'))
+        try:
+            decoded_token = JWTUtil.decode(kwargs.get('token'))
 
-        if decoded_token.get('from_email') is not True:
-            raise drf_exceptions.PermissionDenied(error_messages.WRONG_TOKEN)
+            if decoded_token.get('from_email') is not True:
+                raise drf_exceptions.PermissionDenied(error_messages.WRONG_TOKEN)
 
-        serializer = UserSerializer(User.objects.save_email(**decoded_token))
-        return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, data=serializer.data)
+            UserSerializer(User.objects.save_email(**decoded_token))
+
+            content = loader.render_to_string('email_verified.html', {
+                'app_link': settings.MOBILE_APP_URL.replace('/#Intent', f'?emailVerified=true&&email={decoded_token.get("email")}&&token={kwargs.get("token")}/#Intent'),
+                'email': decoded_token.get('email')
+            })
+            return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, html=content)
+        except Exception as e:
+            content = loader.render_to_string('email_verified.html', {
+                'app_link': settings.MOBILE_APP_URL.replace('/#Intent', '?emailVerified=false/#Intent'),
+                'error': get_http_error_message_and_code(e).get('message')
+            })
+            return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, html=content)
 
     @action(methods=['put'], detail=False, url_path='verify-phonenumber', url_name='verify_phonenumber')
     def verify_phonenumber(self, request):
         AuthUtil.is_auth(request)
         decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
-
         user = User.objects.save_or_verify_phonenumber(email=decoded_token.get('email'), **request.data)
-        if user.otp:
-            send_sms(user.phonenumber, message=user.otp)
-
         serializer = UserSerializer(user)
         return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, data=serializer.data)
 

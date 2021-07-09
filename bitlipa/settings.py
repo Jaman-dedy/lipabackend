@@ -36,6 +36,7 @@ DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default='*')
 API_URL = env('API_URL', default='http://localhost:8000/api/v1')
+MOBILE_APP_URL = env('MOBILE_APP_URL', default='intent://bitlipa.africa/#Intent;scheme=bitlipa;package=africa.bitlipa;end')
 
 # Application definition
 INSTALLED_APPS = [
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'bitlipa.apps.otp',
     'bitlipa.apps.authentication',
     'bitlipa.apps.users',
     'bitlipa.apps.fiat_wallet',

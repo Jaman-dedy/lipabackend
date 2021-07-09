@@ -12,6 +12,7 @@ from bitlipa.utils.split_camel_case_words import split_camel_case_words
 def get_http_error_message_and_code(exc):
 
     error_message = str(get_object_attr(exc, "message", exc))
+
     if isinstance(exc, (core_exceptions.BadRequest, core_exceptions.ValidationError, drf_exceptions.ValidationError)):
         return {"code": status.HTTP_400_BAD_REQUEST, "message": error_message}
 

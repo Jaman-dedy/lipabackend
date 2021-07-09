@@ -7,6 +7,8 @@ from django.core.validators import RegexValidator
 from bitlipa.resources import error_messages
 from bitlipa.utils.otp_util import OTPUtil
 from bitlipa.utils.validator import Validator
+from bitlipa.apps.otp.models import OTP
+from bitlipa.utils.send_sms import send_sms
 
 
 class UserManager(BaseUserManager):
@@ -24,24 +26,24 @@ class UserManager(BaseUserManager):
     def save_or_verify_phonenumber(self, id=None, email=None, **kwargs):
         user = self.model.objects.get(email=email) if email else self.model.objects.get(id=id)
 
-        if not kwargs.get('phonenumber'):
-            raise ValidationError(error_messages.REQUIRED.format('Phone number is '))
+        if not email:
+            raise ValidationError(error_messages.REQUIRED.format('Email is '))
+
+        if kwargs.get('phonenumber') == user.phonenumber:
+            return user
 
         Validator.validate_phonenumber(kwargs.get('phonenumber'))
 
-        if kwargs.get('phonenumber') and not kwargs.get('otp') and not user.phonenumber:
+        if kwargs.get('OTP'):
+            otp_obj = OTP.objects.find(otp=kwargs.get('OTP'), email=email, phonenumber=kwargs.get('phonenumber'))
             user.phonenumber = kwargs.get('phonenumber')
-
-        if kwargs.get('OTP') and kwargs.get('OTP') != user.otp or kwargs.get('phonenumber') != user.phonenumber:
-            raise ValidationError(error_messages.WRONG_OTP)
-        elif kwargs.get('OTP'):
-            user.otp = None
             user.is_phone_verified = True
+            user.save(using=self._db)
+            OTP.objects.remove_all(email=email, phonenumber=kwargs.get('phonenumber'), destination=OTP.OTPDestinations.SMS)
+            return user
 
-        if not kwargs.get('OTP'):
-            user.otp = OTPUtil.generate()
-
-        user.save(using=self._db)
+        otp_obj = OTP.objects.save(email=email, phonenumber=kwargs.get('phonenumber'), digits=4)
+        send_sms(otp_obj.phonenumber, message=otp_obj.otp)
         return user
 
     def create(self, **kwargs):
@@ -69,7 +71,7 @@ class UserManager(BaseUserManager):
         if kwargs.get('password'):
             user.password = make_password(kwargs.get('password'))
 
-        user.is_email_verified = True
+        user.is_phone_verified = True
         user.save(using=self._db)
         return user
 

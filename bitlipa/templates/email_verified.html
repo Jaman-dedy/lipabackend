@@ -1,0 +1,22 @@
+{% extends 'base_email_template.html' %}
+
+{% block content %}
+<p style="text-align: center;">
+  {% if email %}
+  {{email}}
+  <br><br><br>
+  Your E-mail address is confirmed
+  <br><br><br>
+  {% elif error %}
+  {{error}}
+  <br><br><br>
+  {% endif %}
+<div style="text-align: center">
+  <a href={{app_link}}
+    style="margin:35px 0;padding:15px 35px;background:#00343D;color:#ffffff;clear:both;border-radius:30px;text-decoration:none"
+    target='_blank'>
+    Continue
+  </a>
+</div>
+</p>
+{% endblock %}

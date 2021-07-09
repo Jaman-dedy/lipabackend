@@ -27,7 +27,7 @@ class User(models.Model):
 
     class Meta:
         db_table = "users"
-        ordering = ("first_name", "middle_name", "last_name")
+        ordering = ("created_at", "created_at")
 
     def __str__(self):
         return self.get_full_name() or self.email

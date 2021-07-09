@@ -1,8 +1,12 @@
+from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework import status
 
 
-def http_response(status=status.HTTP_200_OK, data=None, message=None, content_type=None) -> Response:
+def http_response(status=status.HTTP_200_OK, data=None, message=None, html=None, content_type=None) -> Response:
+    if html:
+        return HttpResponse(html)
+
     response = {
         'status': status,
         'message': message,
