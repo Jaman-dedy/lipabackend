@@ -78,10 +78,12 @@ class AuthViewSet(viewsets.ViewSet):
         if user.otp:
             content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
             send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], fail_silently=False, html_message=content)
-            return http_response(status=status.HTTP_200_OK, message=success_messages.CONFIRM_LOGIN)
+            return http_response(status=status.HTTP_401_UNAUTHORIZED, data={"is_device_verified": False, "message": success_messages.CONFIRM_LOGIN})
         serializer = UserSerializer(user)
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, expiration_hours=24)
         return http_response(status=status.HTTP_200_OK, data={
             "user": serializer.data,
             "token": user_token
+
+
         })

@@ -112,14 +112,14 @@ class UserManager(BaseUserManager):
             user.save(using=self._db)
 
         if kwargs.get('OTP') and user.otp and kwargs.get('OTP') != user.otp :
-            raise ValidationError(error_messages.WRONG_OTP)
+            raise ValidationError((error_messages.WRONG_OTP))
         elif kwargs.get('OTP') and user.otp:
             user.otp = None
             user.device_id = kwargs.get('device_id')
             user.save(using=self._db)
 
         if kwargs.get('device_id') != user.device_id :
-            user.otp = OTPUtil.generate()
+            user.otp = OTPUtil.generate(digits=4)
             user.save(using=self._db)
             return user
 
