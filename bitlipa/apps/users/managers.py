@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
@@ -43,7 +44,8 @@ class UserManager(BaseUserManager):
             return user
 
         otp_obj = OTP.objects.save(email=email, phonenumber=kwargs.get('phonenumber'), digits=4)
-        send_sms(otp_obj.phonenumber, message=otp_obj.otp)
+        message = f'<#> Your {settings.APP_NAME} verification code is: {otp_obj.otp}\n /{settings.MOBILE_APP_HASH}'
+        send_sms(otp_obj.phonenumber, message=message)
         return user
 
     def create(self, **kwargs):
