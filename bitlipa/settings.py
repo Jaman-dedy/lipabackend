@@ -36,7 +36,9 @@ DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default='*')
 API_URL = env('API_URL', default='http://localhost:8000/api/v1')
+APP_NAME = env('APP_NAME', default='BitLipa')
 MOBILE_APP_URL = env('MOBILE_APP_URL', default='intent://bitlipa.africa/#Intent;scheme=bitlipa;package=africa.bitlipa;end')
+MOBILE_APP_HASH = env('MOBILE_APP_HASH', default='')
 
 # Application definition
 INSTALLED_APPS = [
@@ -163,7 +165,6 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='contact@bitlipa.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 
 EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@bitlipa.com')
-
 
 TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID", default="")
 TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN", default="")
