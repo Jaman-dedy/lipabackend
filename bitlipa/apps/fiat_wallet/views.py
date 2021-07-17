@@ -6,7 +6,6 @@ from .serializers import FiatWalletSerializer
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.resources import error_messages
-from bitlipa.utils.jwt_util import JWTUtil
 from bitlipa.utils.auth_util import AuthUtil
 
 
@@ -26,8 +25,8 @@ class WalletViewSet(viewsets.ViewSet):
 
     def create_wallet(self, request):
         AuthUtil.is_auth(request)
-        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
-        serializer = FiatWalletSerializer(FiatWallet.objects.create_wallet(decoded_token, **request.data))
+
+        serializer = FiatWalletSerializer(FiatWallet.objects.create_wallet(request.decoded_token, **request.data))
 
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
@@ -45,9 +44,8 @@ class WalletViewSet(viewsets.ViewSet):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('wallet '))
 
         AuthUtil.is_auth(request)
-        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
 
-        if decoded_token is None:
+        if request.decoded_token is None:
             return http_response(status=status.HTTP_400_BAD_REQUEST, message=error_messages.WRONG_TOKEN)
 
         fiat_wallet = FiatWallet.objects.get(id=pk)
@@ -60,9 +58,8 @@ class WalletViewSet(viewsets.ViewSet):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('wallet '))
 
         AuthUtil.is_auth(request)
-        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
 
-        if decoded_token is None:
+        if request.decoded_token is None:
             return http_response(status=status.HTTP_400_BAD_REQUEST, message=error_messages.WRONG_TOKEN)
 
         fiat_wallet = FiatWallet.objects.update(id=pk, **request.data)

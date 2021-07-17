@@ -25,7 +25,7 @@
 
 > **Provide the steps to manually test the functionalities implemented in this PR**
 
-- After cloning the [repo](git@github.com:BitLipa/bitlipa-mobile-app.git)
+- After cloning the `git@github.com:BitLipa/bitlipa-mobile-app.git`
 - Check out this branch by `branch here`
 - Run `pip install -r requirements.txt` to install the project dependencies
 - Run `python manage.py test`

@@ -1,3 +1,5 @@
+import logging
+import coloredlogs
 from django.conf import settings
 from rest_framework.renderers import JSONRenderer
 from rest_framework import status
@@ -22,11 +24,13 @@ class HTTPErrorHandler:
 
     def process_exception(self, request, exception):
         if settings.DEBUG is True:
-            raise exception
+            logger = logging.getLogger(__name__)
+            coloredlogs.install(level='DEBUG', logger=logger)
+            logger.exception(f'Exception: >>> {exception}')
 
         try:
             error = get_http_error_message_and_code(exception)
-            return self.format_response(http_response(status=error.get('code'), message=error.get('message')))
+            return self.format_response(http_response(status=error.get('code'), message=error.get('message'), error=error.get('error')))
         except Exception:
             return self.format_response(http_response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

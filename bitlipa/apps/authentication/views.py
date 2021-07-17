@@ -61,8 +61,7 @@ class AuthViewSet(viewsets.ViewSet):
     @action(methods=['put'], detail=False, url_path='verify-phonenumber', url_name='verify_phonenumber')
     def verify_phonenumber(self, request):
         AuthUtil.is_auth(request)
-        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
-        user = User.objects.save_or_verify_phonenumber(email=decoded_token.get('email'), **request.data)
+        user = User.objects.save_or_verify_phonenumber(email=request.decoded_token.get('email'), **request.data)
         serializer = UserSerializer(user)
         return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, data=serializer.data)
 

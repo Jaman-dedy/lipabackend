@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 import environ
 import dj_database_url
+import moneyed
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,10 +51,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'djmoney',
     'bitlipa.apps.otp',
     'bitlipa.apps.authentication',
     'bitlipa.apps.users',
     'bitlipa.apps.fiat_wallet',
+    'bitlipa.apps.crypto_wallets',
 ]
 
 MIDDLEWARE = [
@@ -69,7 +73,7 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'bitlipa.utils.http_error_handler.http_error_handler'
+    'EXCEPTION_HANDLER': lambda e, _: exec('raise e')
 }
 
 ROOT_URLCONF = 'bitlipa.urls'
@@ -92,6 +96,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bitlipa.wsgi.application'
 
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -169,8 +189,6 @@ EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@bitlipa.com')
 TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID", default="")
 TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN", default="")
 TWILIO_NUMBER = env("TWILIO_NUMBER", default="")
-SMS_BROADCAST_TO_NUMBERS = [
-    "",  # use the format +19735551234
-    "",
-    "",
-]
+SMS_BROADCAST_TO_NUMBERS = []
+
+moneyed.add_currency(code='BTC', numeric='4217', name='Bitcoin', countries=())

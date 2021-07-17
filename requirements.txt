@@ -1,9 +1,12 @@
 appdirs==1.4.4
 asgiref==3.3.4
 autopep8==1.5.7
+Babel==2.9.1
 certifi==2021.5.30
 cfgv==3.3.0
 chardet==4.0.0
+colorama==0.4.4
+coloredlogs==15.0.1
 concurrent-log-handler==0.9.9
 coverage==5.5
 distlib==0.3.2
@@ -11,12 +14,14 @@ dj-database-url==0.5.0
 Django==3.2.4
 django-environ==0.4.5
 django-filter==2.4.0
+django-money==2.0.1
 django-phonenumber-field==5.2.0
 djangorestframework==3.12.4
 elasticsearch==7.13.1
 filelock==3.0.12
 flake8==3.9.2
 gunicorn==20.1.0
+humanfriendly==9.2
 identify==2.2.10
 idna==2.10
 kafka-python==1.4.6
@@ -27,6 +32,7 @@ pika==1.2.0
 pre-commit==2.13.0
 psycopg2==2.8.6
 py-log==2.5
+py-moneyed==1.2
 pycodestyle==2.7.0
 pyflakes==2.3.1
 PyJWT==1.7.1

@@ -6,7 +6,6 @@ from .models import User
 from .serializers import UserSerializer
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
-from bitlipa.utils.jwt_util import JWTUtil
 from bitlipa.resources import error_messages
 from bitlipa.utils.auth_util import AuthUtil
 
@@ -19,7 +18,6 @@ class UserViewSet(viewsets.ViewSet):
     @action(methods=['put', 'get'], detail=False, url_path='*', url_name='list_update')
     def list_update(self, request):
         AuthUtil.is_auth(request)
-        decoded_token = JWTUtil.decode(AuthUtil.get_token(request))
 
         # list users
         if request.method == 'GET':
@@ -28,7 +26,7 @@ class UserViewSet(viewsets.ViewSet):
 
         # update user
         if request.method == 'PUT':
-            user = User.objects.update(email=decoded_token.get('email'), **request.data)
+            user = User.objects.update(email=request.decoded_token.get('email'), **request.data)
             return http_response(status=status.HTTP_200_OK, data=UserSerializer(user).data)
 
     # get one user

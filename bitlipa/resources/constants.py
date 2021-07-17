@@ -1,0 +1,2 @@
+BTC = 'BTC'
+DB_ITEMS_LIMIT = 30
