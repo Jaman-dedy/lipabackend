@@ -41,6 +41,7 @@ API_URL = env('API_URL', default='http://localhost:8000/api/v1')
 APP_NAME = env('APP_NAME', default='BitLipa')
 MOBILE_APP_URL = env('MOBILE_APP_URL', default='intent://bitlipa.africa/#Intent;scheme=bitlipa;package=africa.bitlipa;end')
 MOBILE_APP_HASH = env('MOBILE_APP_HASH', default='')
+THRESH0LD_API = env('THRESH0LD_API', default='')
 
 # Application definition
 INSTALLED_APPS = [
@@ -96,22 +97,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bitlipa.wsgi.application'
 
-LOGGING = {
-    'version': 1,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
         },
-    },
-    'loggers': {
-        'django.db.backends': {
-            'level': 'DEBUG',
+        'loggers': {
+            'django.db.backends': {
+                'level': 'DEBUG',
+            },
         },
-    },
-    'root': {
-        'handlers': ['console'],
+        'root': {
+            'handlers': ['console'],
+        }
     }
-}
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases

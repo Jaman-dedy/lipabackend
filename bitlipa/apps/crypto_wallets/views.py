@@ -1,12 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
-from .models import CryptoWallet
-from .serializers import CryptoWalletSerializer
+from bitlipa.resources import error_messages
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
-from bitlipa.resources import error_messages
 from bitlipa.utils.auth_util import AuthUtil
+from .models import CryptoWallet
+from .serializers import CryptoWalletSerializer
 
 
 class WalletViewSet(viewsets.ViewSet):
@@ -25,20 +25,34 @@ class WalletViewSet(viewsets.ViewSet):
 
     def create_wallet(self, request):
         AuthUtil.is_auth(request)
-        serializer = CryptoWalletSerializer(CryptoWallet.objects.create_wallet(request.user, **request.data))
-
+        serializer = CryptoWalletSerializer(CryptoWallet.objects.create_wallet(user=request.user, **request.data))
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+    @action(methods=['post'], detail=False, url_path='addresses', url_name='create_crypto_wallet_addresses')
+    def create_wallet_address(self, request):
+        AuthUtil.is_auth(request)
+        serializer = CryptoWalletSerializer(CryptoWallet.objects.create_wallet_address(user=request.user, **request.data), many=True)
+        return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+    @action(methods=['get'], detail=False, url_path=r'addresses/(?P<wallet_id>.*)', url_name='list_crypto_wallet_addresses')
+    def list_wallet_addresses(self, request, *args, **kwargs):
+        AuthUtil.is_auth(request)
+        response = CryptoWallet.objects.list_wallet_addresses(user=request.user, wallet_id=kwargs.get('wallet_id'))
+        return http_response(status=response.get('status_code') or status.HTTP_200_OK, data=response.get('data'))
 
     def list_wallets(self, request):
         AuthUtil.is_auth(request)
+        kwargs = {
+            'page': request.GET.get('page'),
+            'per_page': request.GET.get('per_page'),
+            'is_master': str(request.GET.get('master')).lower() == 'true' or str(request.GET.get('master')).lower() == '1',
+            'all': str(request.GET.get('all')).lower() == 'true' or str(request.GET.get('all')).lower() == '1',
+            'name__iexact': request.GET.get('name'),
+            'type__iexact': request.GET.get('type'),
+        }
 
-        result = CryptoWallet.objects.get_all(
-            page=request.GET.get('page'),
-            per_page=request.GET.get('per_page'),
-            **{'is_master': str(request.GET.get('master')).lower() == 'true'}
-        )
+        result = CryptoWallet.objects.list(user=request.user, **kwargs)
         serializer = CryptoWalletSerializer(result.get('data'), many=True)
-
         return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
 
     # get one wallet
