@@ -193,4 +193,6 @@ TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN", default="")
 TWILIO_NUMBER = env("TWILIO_NUMBER", default="")
 SMS_BROADCAST_TO_NUMBERS = []
 
-moneyed.add_currency(code='BTC', numeric='4217', name='Bitcoin', countries=())
+moneyed.add_currency(code='ETH', numeric='0001', name='Ethereum', countries=())
+moneyed.add_currency(code='BTC', numeric='0002', name='Bitcoin', countries=())
+moneyed.add_currency(code='TET', numeric='0003', name='Tether', countries=())
