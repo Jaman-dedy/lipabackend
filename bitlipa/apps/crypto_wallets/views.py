@@ -13,7 +13,7 @@ class WalletViewSet(viewsets.ViewSet):
     """
     API endpoint that allows Crypto wallet to be viewed/edited/deleted.
     """
-    @action(methods=['post', 'get'], detail=False, url_path='*', url_name='create_list_update_crypto_wallets')
+    @action(methods=['post', 'get'], detail=False, url_path='*', url_name='create_list_crypto_wallets')
     def create_list_wallets(self, request):
         # list wallets
         if request.method == 'GET':
@@ -28,13 +28,13 @@ class WalletViewSet(viewsets.ViewSet):
         serializer = CryptoWalletSerializer(CryptoWallet.objects.create_wallet(user=request.user, **request.data))
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
-    @action(methods=['post'], detail=False, url_path='addresses', url_name='create_crypto_wallet_addresses')
+    @action(methods=['post'], detail=False, url_path='addresses', url_name='create_crypto_addresses')
     def create_wallet_address(self, request):
         AuthUtil.is_auth(request)
         serializer = CryptoWalletSerializer(CryptoWallet.objects.create_wallet_address(user=request.user, **request.data), many=True)
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
-    @action(methods=['get'], detail=False, url_path=r'addresses/(?P<wallet_id>.*)', url_name='list_crypto_wallet_addresses')
+    @action(methods=['get'], detail=False, url_path=r'addresses/(?P<wallet_id>.*)', url_name='list_crypto_addresses')
     def list_wallet_addresses(self, request, *args, **kwargs):
         AuthUtil.is_auth(request)
         response = CryptoWallet.objects.list_wallet_addresses(user=request.user, wallet_id=kwargs.get('wallet_id'))

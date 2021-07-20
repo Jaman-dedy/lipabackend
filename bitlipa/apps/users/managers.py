@@ -80,9 +80,9 @@ class UserManager(BaseUserManager):
     def update(self, id=None, email=None, **kwargs):
         user = self.model.objects.get(email=email) if email else self.model.objects.get(id=id)
 
-        user.first_name = kwargs.get('first_name') or user.first_name
-        user.middle_name = kwargs.get('middle_name') or user.middle_name
-        user.last_name = kwargs.get('last_name') or user.last_name
+        user.first_name = kwargs.get('first_name', user.first_name)
+        user.middle_name = kwargs.get('middle_name', user.middle_name)
+        user.last_name = kwargs.get('last_name', user.last_name)
 
         if not user.pin and kwargs.get('PIN'):
             user.pin = make_password(kwargs.get('PIN'))

@@ -4,7 +4,7 @@ from hashlib import sha256
 import base64
 
 
-class Thresh0ldChecksum:
+class CYBAVOChecksum:
     def __init__(self, secret, params=None, t=None, r=None, payload=None) -> None:
         self.secret = secret or ''
         self.params = params or []
