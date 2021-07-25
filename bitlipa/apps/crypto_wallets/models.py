@@ -19,7 +19,7 @@ class CryptoWallet(models.Model):
         blank=False,
         null=False,
         default=0,
-        max_digits=19,
+        max_digits=36,
         decimal_places=18,
         currency_field_name='currency'
     )
@@ -38,4 +38,4 @@ class CryptoWallet(models.Model):
 
     class Meta:
         db_table = "crypto_wallets"
-        ordering = ("name", "address", "currency")
+        ordering = ("created_at", "updated_at")

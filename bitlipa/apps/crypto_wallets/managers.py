@@ -14,7 +14,7 @@ from bitlipa.utils.list_utils import filter_list
 from bitlipa.utils.to_int import to_int
 from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.http_request import http_request
-from bitlipa.utils.thresh0ld_checksum import Thresh0ldChecksum
+from bitlipa.utils.cybavo_checksum import CYBAVOChecksum
 
 
 class CryptoWalletManager(models.Manager):
@@ -58,8 +58,8 @@ class CryptoWalletManager(models.Manager):
         crypto_wallet.name = kwargs.get('name')
         crypto_wallet.type = kwargs.get("type")
         crypto_wallet.wallet_id = kwargs.get("wallet_id")
-        crypto_wallet.currency = kwargs.get("currency") or constants.BTC
-        crypto_wallet.balance = kwargs.get('balance') or 0
+        crypto_wallet.currency = kwargs.get("currency", constants.BTC)
+        crypto_wallet.balance = kwargs.get('balance', 0)
         crypto_wallet.address = kwargs.get('address')
         crypto_wallet.description = kwargs.get('description')
         crypto_wallet.api_token = kwargs.get('api_token')
@@ -78,21 +78,20 @@ class CryptoWalletManager(models.Manager):
             if get_object_attr(user, "is_admin")\
             else self.model.objects.get(id=id, user_id=get_object_attr(user, "id"))
 
-        crypto_wallet.name = kwargs.get('name') or crypto_wallet.name
-        crypto_wallet.type = kwargs.get("type") or crypto_wallet.type
-        crypto_wallet.wallet_id = kwargs.get("wallet_id") or crypto_wallet.wallet_id
-        crypto_wallet.currency = kwargs.get("currency") or crypto_wallet.currency
-        crypto_wallet.balance = crypto_wallet.balance if kwargs.get('balance') is None else kwargs.get('balance')
-        crypto_wallet.address = kwargs.get('address') or crypto_wallet.address
-        crypto_wallet.description = crypto_wallet.description if kwargs.get('description') is None else kwargs.get('description')
-        crypto_wallet.api_token = crypto_wallet.api_token if kwargs.get('api_token') is None else kwargs.get('api_token')
-        crypto_wallet.api_secret = crypto_wallet.api_secret if kwargs.get('api_secret') is None else kwargs.get('api_secret')
-        crypto_wallet.api_refresh_token = crypto_wallet.api_refresh_token if kwargs.get('api_refresh_token') is None \
-            else kwargs.get('api_refresh_token')
-        crypto_wallet.logo_url = crypto_wallet.logo_url if kwargs.get('logo_url') is None else kwargs.get('logo_url')
+        crypto_wallet.name = kwargs.get('name', crypto_wallet.name)
+        crypto_wallet.type = kwargs.get("type", crypto_wallet.type)
+        crypto_wallet.wallet_id = kwargs.get("wallet_id", crypto_wallet.wallet_id)
+        crypto_wallet.currency = kwargs.get("currency", crypto_wallet.currency)
+        crypto_wallet.balance = kwargs.get('balance', crypto_wallet.balance)
+        crypto_wallet.address = kwargs.get('address', crypto_wallet.address)
+        crypto_wallet.description = kwargs.get('description', crypto_wallet.description)
+        crypto_wallet.api_token = kwargs.get('api_token', crypto_wallet.api_token)
+        crypto_wallet.api_secret = kwargs.get('api_secret', crypto_wallet.api_secret)
+        crypto_wallet.api_refresh_token = kwargs.get('api_refresh_token', crypto_wallet.api_refresh_token)
+        crypto_wallet.logo_url = kwargs.get('logo_url', crypto_wallet.logo_url)
 
         if get_object_attr(user, "is_admin"):
-            crypto_wallet.is_master = kwargs.get('is_master') or crypto_wallet.is_master
+            crypto_wallet.is_master = kwargs.get('is_master', crypto_wallet.is_master)
 
         crypto_wallet.save(using=self._db)
         return crypto_wallet
@@ -107,7 +106,7 @@ class CryptoWalletManager(models.Manager):
             count = len(kwargs.get('data'))
 
         payload = json.dumps({"count": count, "memos": kwargs.get('memos')})
-        checksum = Thresh0ldChecksum(secret=master_wallet.api_secret, payload=payload).build()
+        checksum = CYBAVOChecksum(secret=master_wallet.api_secret, payload=payload).build()
         response = http_request(
             url=f'{settings.THRESH0LD_API}/v1/sofa/wallets/{master_wallet.wallet_id}/addresses?r={checksum.r}&t={checksum.t}',
             method='POST',
@@ -139,7 +138,7 @@ class CryptoWalletManager(models.Manager):
             raise ValidationError(error_messages.REQUIRED.format('wallet ID is '))
 
         master_wallet = self.model.objects.get(wallet_id=wallet_id or kwargs.get('wallet_id'), is_master=True)
-        checksum = Thresh0ldChecksum(secret=master_wallet.api_secret).build()
+        checksum = CYBAVOChecksum(secret=master_wallet.api_secret).build()
 
         response = http_request(
             url=f'{settings.THRESH0LD_API}/v1/sofa/wallets/{master_wallet.wallet_id}/addresses?r={checksum.r}&t={checksum.t}',

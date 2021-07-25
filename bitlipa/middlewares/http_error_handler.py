@@ -1,5 +1,3 @@
-import logging
-import coloredlogs
 from django.conf import settings
 from rest_framework.renderers import JSONRenderer
 from rest_framework import status
@@ -7,6 +5,7 @@ from rest_framework import status
 from bitlipa.utils.http_response import http_response
 from bitlipa.utils.get_http_error_message_and_code import get_http_error_message_and_code
 from bitlipa.resources import error_messages
+from bitlipa.utils.logger import logger
 
 
 class HTTPErrorHandler:
@@ -24,9 +23,7 @@ class HTTPErrorHandler:
 
     def process_exception(self, request, exception):
         if settings.DEBUG is True:
-            logger = logging.getLogger(__name__)
-            coloredlogs.install(level='DEBUG', logger=logger)
-            logger.exception(f'Exception: >>> {exception}')
+            logger(exception, 'exception')
 
         try:
             error = get_http_error_message_and_code(exception)
