@@ -32,6 +32,8 @@ class UserViewSet(viewsets.ViewSet):
     # get one user
     def retrieve(self, request, pk=None):
         AuthUtil.is_auth(request)
+        if pk == 'me':
+            return http_response(status=status.HTTP_200_OK, data=UserSerializer(request.user).data)
         if not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
 
