@@ -8,8 +8,8 @@ from django.db import models
 from rest_framework import status
 
 
-from bitlipa.resources import error_messages
 from bitlipa.resources import constants
+from bitlipa.resources import error_messages
 from bitlipa.utils.list_utils import filter_list
 from bitlipa.utils.to_int import to_int
 from bitlipa.utils.get_object_attr import get_object_attr
@@ -30,8 +30,10 @@ class CryptoWalletManager(models.Manager):
             if kwargs[key] is not None:
                 table_fields[key] = kwargs[key]
 
-        if not get_object_attr(user, "is_admin"):
-            table_fields['user_id'] = user.id
+        table_fields['user_id'] = user.id
+
+        if get_object_attr(user, "is_admin") and kwargs.get('all'):
+            table_fields.pop('user_id')
 
         object_list = self.model.objects.filter(**{'deleted_at': None, **table_fields}).order_by('-created_at')
         return {
@@ -58,6 +60,7 @@ class CryptoWalletManager(models.Manager):
         crypto_wallet.name = kwargs.get('name')
         crypto_wallet.type = kwargs.get("type")
         crypto_wallet.wallet_id = kwargs.get("wallet_id")
+        crypto_wallet.order_id_prefix = kwargs.get("order_id_prefix")
         crypto_wallet.currency = kwargs.get("currency", constants.BTC)
         crypto_wallet.balance = kwargs.get('balance', 0)
         crypto_wallet.address = kwargs.get('address')
@@ -81,6 +84,7 @@ class CryptoWalletManager(models.Manager):
         crypto_wallet.name = kwargs.get('name', crypto_wallet.name)
         crypto_wallet.type = kwargs.get("type", crypto_wallet.type)
         crypto_wallet.wallet_id = kwargs.get("wallet_id", crypto_wallet.wallet_id)
+        crypto_wallet.order_id_prefix = kwargs.get("order_id_prefix", crypto_wallet.order_id_prefix)
         crypto_wallet.currency = kwargs.get("currency", crypto_wallet.currency)
         crypto_wallet.balance = kwargs.get('balance', crypto_wallet.balance)
         crypto_wallet.address = kwargs.get('address', crypto_wallet.address)
@@ -125,6 +129,7 @@ class CryptoWalletManager(models.Manager):
             crypto_wallet.name = wallet_to_create.get('name')
             crypto_wallet.type = master_wallet.type
             crypto_wallet.wallet_id = master_wallet.wallet_id
+            crypto_wallet.order_id_prefix = master_wallet.order_id_prefix
             crypto_wallet.currency = master_wallet.currency
             crypto_wallet.balance = 0
             crypto_wallet.address = address
@@ -156,6 +161,7 @@ class CryptoWalletManager(models.Manager):
                 'name': master_wallet.name,
                 'type': master_wallet.type,
                 'wallet_id': master_wallet.wallet_id,
+                'order_id_prefix': master_wallet.order_id_prefix,
                 'currency': master_wallet.currency,
                 'balance': format(master_wallet.balance.amount, '.18f'),
                 'address': master_wallet.address,

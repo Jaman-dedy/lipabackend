@@ -17,9 +17,11 @@ class Transaction(models.Model):
         ALL = '-1', _('All')
 
     class State(models.TextChoices):
+        INIT = '0', _('Init')
         PROCESSING = '1', _('Processing')
         IN_POOL = '2', _('TXID in pool')
         IN_CHAIN = '3', _('TXID in chain')
+        DONE = '4', _('Done')
         FAILED = '5', _('Failed')
         CANCELLED = '8', _('Cancelled')
         DROPPED = '10', _('Dropped')
@@ -35,9 +37,9 @@ class Transaction(models.Model):
     type = models.CharField(verbose_name=_("transaction type"), max_length=30, blank=True, null=True)
     wallet_id = models.CharField(verbose_name=_("wallet ID"), max_length=30, blank=True, null=True)
     order_id = models.CharField(verbose_name=_("order ID"), max_length=30, blank=True, null=True)
-    serial = models.CharField(verbose_name=_("serial number"), max_length=100, blank=True, null=True, unique=True)
-    vout_index = models.CharField(verbose_name=_("index of vout"), max_length=100, blank=True, null=True, unique=True)
-    transaction_id = models.CharField(verbose_name=_("transaction ID"), max_length=100, blank=True, null=True, unique=True)
+    serial = models.CharField(verbose_name=_("serial number"), max_length=100, blank=True, null=True)
+    vout_index = models.CharField(verbose_name=_("index of vout"), max_length=100, blank=True, null=True)
+    transaction_id = models.CharField(verbose_name=_("transaction ID"), max_length=100, blank=True, null=True)
     currency = models.CharField(verbose_name=_("transaction currency"), max_length=30, blank=False, null=False)
     fees = MoneyField(verbose_name=_("transaction fees"),
                       blank=False,
@@ -88,7 +90,7 @@ class Transaction(models.Model):
         tx_type = {}
         for (_value, _label) in Transaction.Types.choices:
             if _value == str(value).lower() or str(_label).lower() == str(value).lower():
-                tx_type = {'value': _value, 'label': _label}
+                tx_type = {'value': str(_value), 'label': str(_label)}
                 break
         return tx_type
 
@@ -96,7 +98,7 @@ class Transaction(models.Model):
         tx_state = {}
         for (_value, _label) in Transaction.State.choices:
             if _value == str(value).lower() or str(_label).lower() == str(value).lower():
-                tx_state = {'value': _value, 'label': _label}
+                tx_state = {'value': str(_value), 'label': str(_label)}
                 break
         return tx_state
 
@@ -104,6 +106,6 @@ class Transaction(models.Model):
         tx_state = {}
         for (_value, _label) in Transaction.ProcessingState.choices:
             if _value == str(value).lower() or str(_label).lower() == str(value).lower():
-                tx_state = {'value': _value, 'label': _label}
+                tx_state = {'value': str(_value), 'label': str(_label)}
                 break
         return tx_state

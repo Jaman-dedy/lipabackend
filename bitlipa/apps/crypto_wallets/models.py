@@ -13,6 +13,7 @@ class CryptoWallet(models.Model):
     name = models.CharField(verbose_name=_("wallet name"), max_length=30, blank=True, null=True)
     type = models.CharField(verbose_name=_("wallet type"), max_length=30, blank=True, null=True)
     wallet_id = models.CharField(verbose_name=_("wallet ID"), max_length=30, blank=True, null=True)
+    order_id_prefix = models.CharField(verbose_name=_("order ID preffix"), max_length=30, blank=True, null=True)
     currency = models.CharField(verbose_name=_("wallet currency"), max_length=30, blank=False, null=False)
     balance = MoneyField(
         verbose_name=_("wallet balance"),
