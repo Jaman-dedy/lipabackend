@@ -59,10 +59,8 @@ class WalletViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         AuthUtil.is_auth(request)
 
-        if pk and not is_valid_uuid(pk):
-            return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('wallet '))
-
-        crypto_wallet = CryptoWallet.objects.get(id=pk, user=request.user)
+        crypto_wallet = CryptoWallet.objects.get(id=pk, user=request.user) if is_valid_uuid(pk) else\
+            CryptoWallet.objects.get(address=pk, user=request.user)
         serializer = CryptoWalletSerializer(crypto_wallet)
 
         return http_response(status=status.HTTP_200_OK, data=serializer.data)

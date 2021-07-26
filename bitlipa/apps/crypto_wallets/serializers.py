@@ -1,13 +1,17 @@
 from rest_framework import serializers
 
+from bitlipa.apps.users.serializers import UserSerializer
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
 
 
 class CryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
+    user = UserSerializer()
+
     class Meta:
         model = CryptoWallet
         fields = ['id',
                   'user_id',
+                  'user',
                   'name',
                   'type',
                   'wallet_id',
