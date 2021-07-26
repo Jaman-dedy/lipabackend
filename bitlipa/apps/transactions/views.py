@@ -6,6 +6,7 @@ from bitlipa.resources import error_messages
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.utils.auth_util import AuthUtil
+from bitlipa.utils.logger import logger
 from .models import Transaction
 from .serializers import TransactionSerializer
 
@@ -24,6 +25,18 @@ class TransactionViewSet(viewsets.ViewSet):
         if request.method == 'POST':
             return self.create_transaction(request)
 
+    @action(methods=['post'], detail=False, url_path='send-funds', url_name='send_funds')
+    def send_funds(self, request):
+        AuthUtil.is_auth(request)
+        data = Transaction.objects.send_funds(user=request.user, **request.data)
+        return http_response(status=status.HTTP_201_CREATED, data=data)
+
+    @action(methods=['post'], detail=False, url_path='confirm', url_name='confirm_transaction')
+    def confirm_transaction(self, request):
+        # TODO: Remove logs
+        logger(request.data, 'info')
+        return HttpResponse(status=status.HTTP_200_OK, content='OK')
+
     def create_transaction(self, request):
         AuthUtil.is_auth(request)
         serializer = TransactionSerializer(Transaction.objects.create_or_update_transaction(**request.data))
@@ -31,6 +44,8 @@ class TransactionViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='callback', url_name='create_or_update_transaction')
     def create_or_update_transaction(self, request):
+        # TODO: Remove logs
+        logger(request.data, 'info')
         TransactionSerializer(Transaction.objects.create_or_update_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 

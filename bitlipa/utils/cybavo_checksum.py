@@ -1,7 +1,7 @@
-from django.conf import settings
 import time
-from hashlib import sha256
+import uuid
 import base64
+from hashlib import sha256
 
 
 class CYBAVOChecksum:
@@ -9,7 +9,7 @@ class CYBAVOChecksum:
         self.secret = secret or ''
         self.params = params or []
         self.t = t or int(time.time())  # timestamp
-        self.r = r or settings.APP_NAME  # random string
+        self.r = r or uuid.uuid4().hex.upper()[0:8]  # random string
         self.payload = payload
         self.checksum = ''
 
