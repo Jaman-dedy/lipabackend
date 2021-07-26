@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
 from bitlipa.apps.users.models import User
+from bitlipa.apps.crypto_wallets.models import CryptoWallet
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = User
         fields = ['id',
@@ -18,3 +20,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'created_at',
                   'updated_at'
                   ]
+
+    def to_representation(self, instance):
+        return {
+            **super().to_representation(instance),
+            'crypto_wallets': CryptoWallet.objects.filter(user=instance, is_master=False).values()
+        }

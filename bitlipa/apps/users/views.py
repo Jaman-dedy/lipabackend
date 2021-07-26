@@ -34,11 +34,11 @@ class UserViewSet(viewsets.ViewSet):
         AuthUtil.is_auth(request)
         if pk == 'me':
             return http_response(status=status.HTTP_200_OK, data=UserSerializer(request.user).data)
+
         if not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
 
         user = User.objects.get(id=pk)
-
         return http_response(status=status.HTTP_200_OK, data=UserSerializer(user).data)
 
     # update user
