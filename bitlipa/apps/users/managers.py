@@ -1,11 +1,15 @@
 from django.conf import settings
 from django.contrib.auth.models import BaseUserManager
+from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.db import models
 
-
+from bitlipa.resources import constants
 from bitlipa.resources import error_messages
+from bitlipa.utils.to_int import to_int
+from bitlipa.utils.list_utils import filter_list
 from bitlipa.utils.otp_util import OTPUtil
 from bitlipa.utils.validator import Validator
 from bitlipa.apps.otp.models import OTP
@@ -13,6 +17,27 @@ from bitlipa.utils.send_sms import send_sms
 
 
 class UserManager(BaseUserManager):
+    def list(self, user=None, **kwargs):
+        table_fields = {}
+        (page, per_page) = (to_int(kwargs.get('page'), 1), to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT))
+
+        for key in filter_list(kwargs.keys(), values_to_exclude=['page', 'per_page']):
+            if kwargs[key] is not None:
+                table_fields[key] = kwargs[key]
+
+        query = models.Q(**{'deleted_at': None, **table_fields})
+
+        object_list = self.model.objects.filter(query).order_by('-created_at')
+        data = Paginator(object_list, per_page).page(page).object_list
+        return {
+            'data': data,
+            'meta': {
+                'page': page,
+                'per_page': per_page,
+                'total': object_list.count()
+            }
+        }
+
     def save_email(self, **kwargs):
         user = self.model()
 
