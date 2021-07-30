@@ -114,6 +114,8 @@ class TransactionManager(models.Manager):
                                                      address__in=[kwargs.get('from_address'), kwargs.get('to_address')])
         if len(crypto_wallets):
             for crypto_wallet in crypto_wallets:
+                transaction.sender = get_object_attr(crypto_wallet, "user") if crypto_wallet.address == kwargs.get('from_address') else None
+                transaction.receiver = get_object_attr(crypto_wallet, "user") if crypto_wallet.address == kwargs.get('to_address') else None
                 if tx_type == str(tx_model.Types.WITHDRAW.label) and crypto_wallet.address == kwargs.get('from_address'):
                     crypto_wallet.balance.amount -= tx_total_amount  # debit sender wallet
 

@@ -21,8 +21,18 @@ class UserViewSet(viewsets.ViewSet):
 
         # list users
         if request.method == 'GET':
-            queryset = User.objects.all().order_by('-created_at')
-            return http_response(status=status.HTTP_200_OK, data=UserSerializer(queryset, many=True).data)
+            kwargs = {
+                'page': request.GET.get('page'),
+                'per_page': request.GET.get('per_page'),
+                'first_name__iexact': request.GET.get('first_name'),
+                'middle_name__iexact': request.GET.get('middle_name'),
+                'last_name__iexact': request.GET.get('last_name'),
+                'email__iexact': request.GET.get('email'),
+                'phonenumber__iexact': request.GET.get('phonenumber'),
+            }
+            result = User.objects.list(user=request.user, **kwargs)
+            serializer = UserSerializer(result.get('data'), many=True)
+            return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
 
         # update user
         if request.method == 'PUT':
@@ -32,13 +42,22 @@ class UserViewSet(viewsets.ViewSet):
     # get one user
     def retrieve(self, request, pk=None):
         AuthUtil.is_auth(request)
-        if pk == 'me':
-            return http_response(status=status.HTTP_200_OK, data=UserSerializer(request.user).data)
+        user = None
+        if pk == 'by_phonenumber' and request.GET.get('phonenumber'):
+            user = User.objects.get(phonenumber__iexact=request.GET.get('phonenumber'))
 
-        if not is_valid_uuid(pk):
+        if pk == 'by_email' and request.GET.get('email'):
+            user = User.objects.get(email__iexact=request.GET.get('email'))
+
+        if pk == 'me':
+            user = request.user
+
+        if not user and is_valid_uuid(pk):
+            user = User.objects.get(id=pk)
+
+        if not user and not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
 
-        user = User.objects.get(id=pk)
         return http_response(status=status.HTTP_200_OK, data=UserSerializer(user).data)
 
     # update user
