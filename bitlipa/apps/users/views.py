@@ -1,3 +1,4 @@
+import urllib.parse
 from rest_framework import exceptions as drf_exceptions
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -27,8 +28,8 @@ class UserViewSet(viewsets.ViewSet):
                 'first_name__iexact': request.GET.get('first_name'),
                 'middle_name__iexact': request.GET.get('middle_name'),
                 'last_name__iexact': request.GET.get('last_name'),
-                'email__iexact': request.GET.get('email'),
-                'phonenumber__iexact': request.GET.get('phonenumber'),
+                'email__iexact': urllib.parse.unquote(request.GET.get('email')),
+                'phonenumber__iexact': urllib.parse.unquote(request.GET.get('phonenumber')),
             }
             result = User.objects.list(user=request.user, **kwargs)
             serializer = UserSerializer(result.get('data'), many=True)
@@ -40,14 +41,14 @@ class UserViewSet(viewsets.ViewSet):
             return http_response(status=status.HTTP_200_OK, data=UserSerializer(user).data)
 
     # get one user
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None, **kwargs):
         AuthUtil.is_auth(request)
         user = None
         if pk == 'by_phonenumber' and request.GET.get('phonenumber'):
-            user = User.objects.get(phonenumber__iexact=request.GET.get('phonenumber'))
+            user = User.objects.get(phonenumber__iexact=urllib.parse.unquote(request.GET.get('phonenumber')))
 
         if pk == 'by_email' and request.GET.get('email'):
-            user = User.objects.get(email__iexact=request.GET.get('email'))
+            user = User.objects.get(email__iexact=urllib.parse.unquote(request.GET.get('email')))
 
         if pk == 'me':
             user = request.user
