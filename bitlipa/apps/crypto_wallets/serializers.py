@@ -27,11 +27,13 @@ class CryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class BasicCryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
+    user = BasicUserSerializer(data={'include_wallets': False})
 
     class Meta:
         model = CryptoWallet
         fields = ['id',
                   'user_id',
+                  'user',
                   'name',
                   'type',
                   'wallet_id',
