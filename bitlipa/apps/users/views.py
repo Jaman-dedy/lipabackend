@@ -4,7 +4,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import BasicUserSerializer, UserSerializer
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.resources import error_messages
@@ -58,8 +58,8 @@ class UserViewSet(viewsets.ViewSet):
 
         if not user and not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
-
-        return http_response(status=status.HTTP_200_OK, data=UserSerializer(user).data)
+        user_data = UserSerializer(user).data if user.id == request.user.id else BasicUserSerializer(user).data
+        return http_response(status=status.HTTP_200_OK, data=user_data)
 
     # update user
     def update(self, request, pk=None):
