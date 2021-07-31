@@ -6,7 +6,7 @@ from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.utils.auth_util import AuthUtil
 from .models import CryptoWallet
-from .serializers import CryptoWalletSerializer
+from .serializers import CryptoWalletSerializer, BasicCryptoWalletSerializer
 
 
 class WalletViewSet(viewsets.ViewSet):
@@ -59,9 +59,10 @@ class WalletViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         AuthUtil.is_auth(request)
 
-        crypto_wallet = CryptoWallet.objects.get(id=pk, user=request.user) if is_valid_uuid(pk) else\
-            CryptoWallet.objects.get(address=pk, user=request.user)
-        serializer = CryptoWalletSerializer(crypto_wallet)
+        crypto_wallet = CryptoWallet.objects.get(id=pk) if is_valid_uuid(pk) else\
+            CryptoWallet.objects.get(address=pk)
+        serializer = CryptoWalletSerializer(crypto_wallet) if crypto_wallet.user_id == request.user.id\
+            else BasicCryptoWalletSerializer(crypto_wallet)
 
         return http_response(status=status.HTTP_200_OK, data=serializer.data)
 
