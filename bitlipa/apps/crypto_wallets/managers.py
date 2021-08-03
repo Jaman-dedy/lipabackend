@@ -32,7 +32,7 @@ class CryptoWalletManager(models.Manager):
 
         table_fields['user_id'] = user.id
 
-        if get_object_attr(user, "is_admin") and kwargs.get('all'):
+        if (get_object_attr(user, "is_admin") and kwargs.get('all')) or kwargs.get('is_master'):
             table_fields.pop('user_id')
 
         object_list = self.model.objects.filter(**{'deleted_at': None, **table_fields}).order_by('-created_at')
