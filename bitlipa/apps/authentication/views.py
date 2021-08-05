@@ -34,7 +34,7 @@ class AuthViewSet(viewsets.ViewSet):
             user = User.objects.get(email__iexact=email)
             if user.is_email_verified and user.is_phone_verified and user.phonenumber and user.pin:
                 raise IntegrityError(error_messages.CONFLICT.format(f'{email} '))
-            elif not user.phonenumber and not user.pin:
+            elif not user.phonenumber or not user.pin:
                 user.delete()
 
         email_token = JWTUtil.encode({"email": email, "from_email": True}, expiration_hours=24)
