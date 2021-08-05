@@ -1,4 +1,6 @@
 from django.conf import settings
+from contextlib import suppress
+from django.db.utils import IntegrityError
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.core.mail import send_mail
@@ -28,6 +30,13 @@ class AuthViewSet(viewsets.ViewSet):
             raise core_exceptions.ValidationError(error_messages.REQUIRED.format('Email is '))
 
         email = Validator.validate_email(request.data.get('email'))
+        with suppress(User.DoesNotExist):
+            user = User.objects.get(email__iexact=email)
+            if user.is_email_verified and user.is_phone_verified and user.phonenumber and user.pin:
+                raise IntegrityError(error_messages.CONFLICT.format(f'{email} '))
+            elif not user.phonenumber and not user.pin:
+                user.delete()
+
         email_token = JWTUtil.encode({"email": email, "from_email": True}, expiration_hours=24)
         content = loader.render_to_string('verify_email.html', {'verification_link': f'{settings.API_URL}/auth/verify-email/{email_token}/'})
         send_mail('Verify account', '', settings.EMAIL_SENDER, [email], fail_silently=False, html_message=content)
