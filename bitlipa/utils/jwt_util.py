@@ -18,9 +18,9 @@ class JWTUtil:
         except (jwt.PyJWTError, TypeError):
             raise core_exceptions.ValidationError(error_messages.INTERNAL_SERVER_ERROR)
 
-    def decode(encoded_jwt: str) -> dict:
+    def decode(encoded_jwt: str, options: dict = None) -> dict:
         try:
-            return jwt.decode(encoded_jwt, settings.SECRET_KEY, algorithms=["HS256"])
+            return jwt.decode(encoded_jwt, settings.SECRET_KEY, algorithms=["HS256"], options=options)
         except jwt.ExpiredSignatureError:
             raise drf_exceptions.PermissionDenied(error_messages.TOKEN_EXPIRED)
         except jwt.PyJWTError:

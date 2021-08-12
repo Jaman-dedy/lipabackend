@@ -92,6 +92,15 @@ class AuthViewSet(viewsets.ViewSet):
         return http_response(status=status.HTTP_200_OK, data={
             "user": serializer.data,
             "token": user_token
+        })
 
+    @action(methods=['get'], detail=False, url_path=r'refresh-token/(?P<token>.*)', url_name='refresh_token')
+    def refresh_token(self, request, *args, **kwargs):
+        decoded_token = JWTUtil.decode(kwargs.get('token'), options={"verify_exp": False})
 
+        if decoded_token.get('exp'):
+            decoded_token.pop('exp')
+
+        return http_response(status=status.HTTP_200_OK, data={
+            "token": JWTUtil.encode(decoded_token)
         })

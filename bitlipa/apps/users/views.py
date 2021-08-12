@@ -28,8 +28,8 @@ class UserViewSet(viewsets.ViewSet):
                 'first_name__iexact': request.GET.get('first_name'),
                 'middle_name__iexact': request.GET.get('middle_name'),
                 'last_name__iexact': request.GET.get('last_name'),
-                'email__iexact': urllib.parse.unquote(request.GET.get('email')),
-                'phonenumber__iexact': urllib.parse.unquote(request.GET.get('phonenumber')),
+                'email__iexact': urllib.parse.unquote(request.GET.get('email')) if request.GET.get('email') else None,
+                'phonenumber__iexact': urllib.parse.unquote(request.GET.get('phonenumber')) if request.GET.get('phonenumber') else None,
             }
             result = User.objects.list(user=request.user, **kwargs)
             serializer = UserSerializer(result.get('data'), many=True)
