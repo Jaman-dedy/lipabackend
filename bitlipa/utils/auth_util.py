@@ -16,6 +16,7 @@ class AuthUtil:
 
         decoded_token = JWTUtil.decode(token.replace('Bearer', '').strip())
         request.decoded_token = decoded_token
+
         try:
             request.user = User.objects.get(email=decoded_token.get('email'))
         except Exception:
