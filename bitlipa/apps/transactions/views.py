@@ -15,6 +15,9 @@ class TransactionViewSet(viewsets.ViewSet):
     """
     API endpoints that allow transactions to be viewed/edited/deleted.
     """
+    authentication_classes = []
+    permission_classes = []
+
     @action(methods=['post', 'get'], detail=False, url_path='*', url_name='create_list_transactions')
     def create_list_transactions(self, request):
         # list transactions
@@ -29,6 +32,18 @@ class TransactionViewSet(viewsets.ViewSet):
     def send_funds(self, request):
         AuthUtil.is_auth(request)
         data = Transaction.objects.send_funds(user=request.user, **request.data)
+        return http_response(status=status.HTTP_201_CREATED, data=data)
+
+    @action(methods=['post'], detail=False, url_path='topup-funds', url_name='topup_funds')
+    def topup_funds(self, request):
+        AuthUtil.is_auth(request)
+        data = Transaction.objects.topup_funds(user=request.user, **request.data)
+        return http_response(status=status.HTTP_201_CREATED, data=data)
+
+    @action(methods=['post'], detail=False, url_path='beyonic-withdraw', url_name='beyonic_withdraw')
+    def beyonic_withdraw(self, request):
+        AuthUtil.is_auth(request)
+        data = Transaction.objects.beyonic_withdraw(user=request.user, **request.data)
         return http_response(status=status.HTTP_201_CREATED, data=data)
 
     @action(methods=['post'], detail=False, url_path='confirm', url_name='confirm_transaction')
@@ -47,6 +62,13 @@ class TransactionViewSet(viewsets.ViewSet):
         # TODO: Remove logs
         logger(request.data, 'info')
         TransactionSerializer(Transaction.objects.create_or_update_transaction(**request.data))
+        return HttpResponse(status=status.HTTP_200_OK, content='OK')
+
+    @action(methods=['post'], detail=False, url_path='topup/callback', url_name='topup_transaction')
+    def create_or_update_topup_transaction(self, request):
+        # TODO: Remove logs
+        # logger(request.data, 'info')
+        TransactionSerializer(Transaction.objects.create_or_update_topup_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
     def list_transactions(self, request):

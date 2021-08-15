@@ -42,6 +42,8 @@ APP_NAME = env('APP_NAME', default='BitLipa')
 MOBILE_APP_URL = env('MOBILE_APP_URL', default='intent://bitlipa.africa/#Intent;scheme=bitlipa;package=africa.bitlipa;end')
 MOBILE_APP_HASH = env('MOBILE_APP_HASH', default='')
 THRESH0LD_API = env('THRESH0LD_API', default='')
+BEYONIC_API = env('BEYONIC_API', default='')
+BEYONIC_API_TOKEN = env('BEYONIC_API_TOKEN', default='')
 
 # Application definition
 INSTALLED_APPS = [

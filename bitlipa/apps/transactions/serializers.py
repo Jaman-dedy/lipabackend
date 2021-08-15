@@ -6,7 +6,8 @@ from bitlipa.apps.users.serializers import UserSerializer
 
 class TransactionSerializer(serializers.HyperlinkedModelSerializer):
 
-    (sender, receiver) = (UserSerializer(), UserSerializer())
+    (sender, receiver) = (UserSerializer(data = {'include_wallets': False}), 
+                          UserSerializer(data = {'include_wallets': False}))
 
     class Meta:
         model = Transaction
