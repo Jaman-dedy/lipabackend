@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'bitlipa.apps.users',
     'bitlipa.apps.fiat_wallet',
     'bitlipa.apps.crypto_wallets',
-    'bitlipa.apps.transactions'
+    'bitlipa.apps.transactions',
+    'bitlipa.apps.currency_exchange'
 ]
 
 MIDDLEWARE = [
