@@ -19,6 +19,7 @@ class User(models.Model):
     is_phone_verified = models.BooleanField(verbose_name="is phone verified", blank=False, null=False, default=False)
     otp = models.CharField(verbose_name=_("Verification code"), max_length=6, blank=True, null=True)
     device_id = models.CharField(verbose_name=_("Device id"), max_length=30, blank=True, null=True)
+    firebase_token = models.CharField(verbose_name=_("Firebase token"), max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
     deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)
