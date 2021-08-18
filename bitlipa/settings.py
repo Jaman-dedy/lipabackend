@@ -35,15 +35,21 @@ SECRET_KEY = env('SECRET_KEY', default='bitlipa-secret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
-
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default='*')
+
 API_URL = env('API_URL', default='http://localhost:8000/api/v1')
 APP_NAME = env('APP_NAME', default='BitLipa')
 MOBILE_APP_URL = env('MOBILE_APP_URL', default='intent://bitlipa.africa/#Intent;scheme=bitlipa;package=africa.bitlipa;end')
 MOBILE_APP_HASH = env('MOBILE_APP_HASH', default='')
 THRESH0LD_API = env('THRESH0LD_API', default='')
+# BEYONIC
 BEYONIC_API = env('BEYONIC_API', default='')
 BEYONIC_API_TOKEN = env('BEYONIC_API_TOKEN', default='')
+# FIXER RAPID API
+FIXER_RAPID_API_URL = env('FIXER_RAPID_API_URL', default='')
+FIXER_RAPID_API_KEY = env('FIXER_RAPID_API_KEY', default='')
+FIXER_RAPID_API_HOST = env('FIXER_RAPID_API_HOST', default='')
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -55,6 +61,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'djmoney',
+    'django_apscheduler',
+    # bitlipa apps
+    'bitlipa',
     'bitlipa.apps.otp',
     'bitlipa.apps.authentication',
     'bitlipa.apps.users',
@@ -82,6 +91,7 @@ REST_FRAMEWORK = {
 }
 
 ROOT_URLCONF = 'bitlipa.urls'
+
 
 TEMPLATES = [
     {

@@ -7,13 +7,14 @@ from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.resources import error_messages
 from bitlipa.utils.auth_util import AuthUtil
+from .tasks import update_exchange_rates
 
 
 class CurrencyExchangeViewSet(viewsets.ViewSet):
     """
     API endpoint that allows currency exchange to be viewed/edited/deleted.
     """
-    @action(methods=['post', 'get'], detail=False, url_path='*', url_name='create_list_exchange_rates')
+    @action(methods=['post', 'get', 'put'], detail=False, url_path='*', url_name='create_list_exchange_rates')
     def create_list_exchange_rates(self, request):
         # list exchange rates
         if request.method == 'GET':
@@ -85,3 +86,8 @@ class CurrencyExchangeViewSet(viewsets.ViewSet):
         AuthUtil.is_auth(request)
         currency_exchange = CurrencyExchange.objects.convert(**request.data)
         return http_response(status=status.HTTP_200_OK, data=currency_exchange)
+
+    @action(methods=['put'], detail=False, url_path='update-rates', url_name='update_rates')
+    def update_rates(self, request):
+        AuthUtil.is_auth(request, True)
+        return http_response(status=status.HTTP_200_OK, data=update_exchange_rates(True))
