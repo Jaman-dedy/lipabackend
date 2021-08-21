@@ -21,6 +21,7 @@ from bitlipa.utils.http_response import http_response
 from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.auth_util import AuthUtil
 from bitlipa.utils.validator import Validator
+from bitlipa.utils.firebase_messaging import send_notification
 
 
 class AuthViewSet(viewsets.ViewSet):
@@ -86,6 +87,7 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='login', url_name='login')
     def login_user(self, request):
+        send_notification(tokens=['ggggg'])
         user = User.objects.login(**request.data)
         if get_object_attr(user, 'otp'):
             content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
