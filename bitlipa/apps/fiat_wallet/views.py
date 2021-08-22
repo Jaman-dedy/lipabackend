@@ -26,7 +26,7 @@ class WalletViewSet(viewsets.ViewSet):
     def create_wallet(self, request):
         AuthUtil.is_auth(request)
 
-        serializer = FiatWalletSerializer(FiatWallet.objects.create_wallet(request.decoded_token, **request.data))
+        serializer = FiatWalletSerializer(FiatWallet.objects.create_wallet(user=request.user, **request.data))
 
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
