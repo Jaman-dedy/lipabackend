@@ -18,6 +18,7 @@ from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.http_request import http_request
 from bitlipa.utils.cybavo_checksum import CYBAVOChecksum
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
+from bitlipa.apps.fiat_wallet.models import FiatWallet
 
 
 class TransactionManager(models.Manager):
@@ -247,6 +248,7 @@ class TransactionManager(models.Manager):
         return transaction
 
     def create_or_update_topup_transaction(self, **kwargs):
+        print('transaction', kwargs)
         tx_model = self.model
         errors = dict()
         if not kwargs.get('data'):
@@ -263,18 +265,18 @@ class TransactionManager(models.Manager):
 
         metadata = data.get('metadata')
 
-        if not metadata.get('crypto_wallet_id'):
-            errors['crypto_wallet_id'] = error_messages.REQUIRED.format('crypto_wallet_id is ')
+        if not metadata.get('crypto_wallet_id') and not metadata.get('fiat_wallet_id') :
+            errors['wallet_id'] = error_messages.REQUIRED.format('wallet_id is ')
 
         if len(errors) != 0:
             raise ValidationError(str(errors))
 
         tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
+        tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
         tx_id = data.get('id')
         tx_fees = to_decimal(data.get('fees', 0))
         tx_amount = to_decimal(data.get('amount'))
         tx_total_amount = data.get('total_amount', tx_amount + tx_fees)
-        crypto_wallet = CryptoWallet.objects.get(id=tx_crypto_wallet_id)
 
         try:
             transaction = tx_model.objects.get(transaction_id=tx_id, serial=kwargs.get('event'))
@@ -284,30 +286,30 @@ class TransactionManager(models.Manager):
         except tx_model.DoesNotExist:
             transaction = tx_model()
 
-        if(data.get("status") == "success"):
-            # TODO : Convert fiat amount to crypto
-            crypto_wallet.balance += tx_amount
+        user_wallet = CryptoWallet.objects.get(id=tx_crypto_wallet_id) if tx_crypto_wallet_id \
+            else FiatWallet.objects.get(id=tx_fiat_wallet_id)
 
         transaction.transaction_id = tx_id
         transaction.serial = kwargs.get('event')
         transaction.type = constants.BEYONIC_TOP_UP
-        transaction.wallet_id = crypto_wallet.wallet_id
-        transaction.currency = crypto_wallet.currency
+        transaction.wallet_id = get_object_attr(user_wallet, 'wallet_id')
+        transaction.currency = user_wallet.currency
         transaction.description = kwargs.get('description')
         transaction.state = data.get('status')
         transaction.fees = tx_fees or 0
         transaction.amount = tx_amount or 0
         transaction.total_amount = tx_total_amount
         transaction.from_address = data.get('phone_number')
-        transaction.to_address = crypto_wallet.address
-        transaction.receiver = crypto_wallet.user
+        transaction.to_address = get_object_attr(user_wallet, 'address') or\
+            get_object_attr(user_wallet, 'number')
+        transaction.receiver = user_wallet.user
 
-        transaction.save(using=self._db)
+        if(data.get("status") == "success" or data.get("status") == "successful"):
+            # TODO : Convert fiat amount to crypto
+            user_wallet.balance.amount += tx_amount
+            user_wallet.save()
+            transaction.save(using=self._db)
         return transaction
-
-    print('whatever')
-    print('whatever')
-    print('Testing git')
 
     def delete(self, id=None, user=None):
         transaction = self.model.objects.get(id=id) \

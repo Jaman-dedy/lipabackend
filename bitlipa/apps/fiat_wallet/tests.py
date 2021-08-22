@@ -13,16 +13,16 @@ class WalletCrudAPIViewTestCase(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.url = reverse('fiat_wallet-create_list_update_wallets')
-        self.default_wallet = FiatWallet(wallet_name="sport", wallet_number="JAMAN-USD-01", wallet_currency="USD")
+        self.default_wallet = FiatWallet(name="sport", currency="JAMAN-USD-01", currency="USD")
         user = User(email='johnsmith@gmail.com')
         user.save()
         self.default_wallet.save()
 
     def test_wallet_creation(self):
         wallet_data = {
-            "wallet_name": "Business",
-            "wallet_number": "USD-01-JAMAN",
-            "wallet_currency": "USD",
+            "name": "Business",
+            "currency": "USD-01-JAMAN",
+            "currency": "USD",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
         headers = {'HTTP_Authorization': f'Bearer {token}'}
@@ -33,9 +33,9 @@ class WalletCrudAPIViewTestCase(APITestCase):
 
     def test_wallet_creation_name_required(self):
         wallet_data = {
-            "wallet_name": "",
-            "wallet_number": "USD-01-JAMAN",
-            "wallet_currency": "USD",
+            "name": "",
+            "currency": "USD-01-JAMAN",
+            "currency": "USD",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
         headers = {'HTTP_Authorization': f'Bearer {token}'}
@@ -44,9 +44,9 @@ class WalletCrudAPIViewTestCase(APITestCase):
 
     def test_wallet_creation_currency_required(self):
         wallet_data = {
-            "wallet_name": "sport",
-            "wallet_number": "USD-01-JAMAN",
-            "wallet_currency": "",
+            "name": "sport",
+            "currency": "USD-01-JAMAN",
+            "currency": "",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
         headers = {'HTTP_Authorization': f'Bearer {token}'}
@@ -56,9 +56,9 @@ class WalletCrudAPIViewTestCase(APITestCase):
     def test_update_wallet(self):
 
         wallet_data = {
-            "wallet_name": "Business",
-            "wallet_number": "USD-01-JAMAN",
-            "wallet_currency": "USD",
+            "name": "Business",
+            "currency": "USD-01-JAMAN",
+            "currency": "USD",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
         headers = {'HTTP_Authorization': f'Bearer {token}'}
