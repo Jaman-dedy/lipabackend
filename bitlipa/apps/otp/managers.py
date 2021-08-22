@@ -8,7 +8,7 @@ from bitlipa.utils.validator import Validator
 
 
 class OTPManager(models.Manager):
-    def save(self, otp=None, email=None, phonenumber=None, digits=None):
+    def save(self, otp=None, email=None, phonenumber=None, digits=None, destination=None):
         otp_obj = self.model()
 
         if not email or not phonenumber:
@@ -23,15 +23,18 @@ class OTPManager(models.Manager):
             Validator.validate_phonenumber(phonenumber)
             otp_obj.phonenumber = phonenumber
 
+        if destination:
+            otp_obj.destination = destination
+
         otp_obj.otp = otp or OTPUtil.generate(digits=digits)
         otp_obj.save(using=self._db)
         return otp_obj
 
-    def find(self, otp=None, email=None, phonenumber=None):
+    def find(self, otp=None, email=None, phonenumber=None, destination=None):
         try:
-            return self.model.objects.get(email=email, otp=otp) \
+            return self.model.objects.get(email=email, otp=otp, destination=destination) \
                 if email else \
-                self.model.objects.get(phonenumber=phonenumber, otp=otp)
+                self.model.objects.get(phonenumber=phonenumber, otp=otp, destination=destination)
         except Exception:
             raise ValidationError(error_messages.WRONG_OTP)
 

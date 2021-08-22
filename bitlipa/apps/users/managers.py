@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import BaseUserManager
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password, check_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.validators import RegexValidator
 from django.db import models
 
@@ -10,10 +10,10 @@ from bitlipa.resources import constants
 from bitlipa.resources import error_messages
 from bitlipa.utils.to_int import to_int
 from bitlipa.utils.list_utils import filter_list
-from bitlipa.utils.otp_util import OTPUtil
 from bitlipa.utils.validator import Validator
 from bitlipa.apps.otp.models import OTP
 from bitlipa.utils.send_sms import send_sms
+from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 
 
 class UserManager(BaseUserManager):
@@ -69,7 +69,7 @@ class UserManager(BaseUserManager):
             return user
 
         otp_obj = OTP.objects.save(email=email, phonenumber=kwargs.get('phonenumber'), digits=4)
-        message = f'<#> Your {settings.APP_NAME} verification code is: {otp_obj.otp}\n /{settings.MOBILE_APP_HASH}'
+        message = f'<#> Your {settings.APP_NAME} verification code is: {otp_obj.otp}\n {settings.MOBILE_APP_HASH}'
         send_sms(otp_obj.phonenumber, message=message)
         return user
 
@@ -109,6 +109,8 @@ class UserManager(BaseUserManager):
         user.middle_name = kwargs.get('middle_name', user.middle_name)
         user.last_name = kwargs.get('last_name', user.last_name)
         user.firebase_token = kwargs.get('firebase_token', user.firebase_token)
+        user.country = kwargs.get('country', user.country)
+        user.country_code = kwargs.get('country_code', user.country_code)
 
         if not user.pin and kwargs.get('PIN'):
             user.pin = make_password(kwargs.get('PIN'))
@@ -124,39 +126,59 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def check_login_from_different_device(user, **kwargs):
+        if user.device_id and not kwargs.get('OTP') and kwargs.get('device_id') != user.device_id:
+            return OTP.objects.save(email=user.email,
+                                    phonenumber=user.phonenumber,
+                                    digits=4,
+                                    destination=OTP.OTPDestinations.EMAIL)
+
+        if user.device_id and kwargs.get('OTP') and kwargs.get('device_id') != user.device_id:
+            OTP.objects.find(otp=kwargs.get('OTP'),
+                             email=user.email,
+                             phonenumber=user.phonenumber,
+                             destination=OTP.OTPDestinations.EMAIL)
+
+    def check_login_from_different_country(user, **kwargs):
+        if user.country and not kwargs.get('OTP') and kwargs.get('country', '').lower() != user.country.lower():
+            return OTP.objects.save(email=user.email,
+                                    phonenumber=user.phonenumber,
+                                    digits=4,
+                                    destination=OTP.OTPDestinations.EMAIL)
+
+        if user.country and kwargs.get('OTP') and kwargs.get('country', '').lower() != user.country.lower():
+            OTP.objects.find(otp=kwargs.get('OTP'),
+                             email=user.email,
+                             phonenumber=user.phonenumber,
+                             destination=OTP.OTPDestinations.EMAIL)
+
     def login(self, **kwargs):
-        if not kwargs.get('email'):
-            raise ValidationError(error_messages.REQUIRED.format('Email is '))
+        errors = {}
+        errors['email'] = error_messages.REQUIRED.format('Email is ') if not kwargs.get('email') else None
+        errors['PIN'] = error_messages.REQUIRED.format('PIN is ') if not kwargs.get('PIN') else None
+        errors['device_id'] = error_messages.REQUIRED.format('Device id is ') if not kwargs.get('device_id') else None
 
-        if not kwargs.get('PIN'):
-            raise ValidationError(error_messages.REQUIRED.format('PIN is '))
+        if len(remove_dict_none_values(errors)) != 0:
+            raise ValidationError(str(errors))
+
         user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+        otp_obj = UserManager.check_login_from_different_device(user, **kwargs)
+        otp_obj = UserManager.check_login_from_different_country(user, **kwargs) or otp_obj
 
-        if not kwargs.get('device_id'):
-            raise ValidationError(error_messages.REQUIRED.format('Device id is '))
+        if otp_obj:
+            return otp_obj
 
-        if kwargs.get('device_id') and not user.device_id:
-            user.device_id = kwargs.get('device_id')
-            user.save(using=self._db)
+        OTP.objects.remove_all(email=user.email, phonenumber=user.phonenumber, destination=OTP.OTPDestinations.EMAIL)
 
-        if kwargs.get('OTP') and user.otp and kwargs.get('OTP') != user.otp :
-            raise ValidationError((error_messages.WRONG_OTP))
-        elif kwargs.get('OTP') and user.otp:
-            user.otp = None
-            user.device_id = kwargs.get('device_id')
-            user.save(using=self._db)
+        user.device_id = kwargs.get('device_id')
+        user.country = kwargs.get('country')
+        user.save(using=self._db)
 
-        if kwargs.get('device_id') != user.device_id :
-            user.otp = OTPUtil.generate(digits=4)
-            user.save(using=self._db)
-            return user
-
-        if user.is_email_verified is False:
-            raise ValidationError(error_messages.EMAIL_NOT_VERIFIED)
-
-        if user.is_phone_verified is False:
-            raise ValidationError(error_messages.PHONE_NOT_VERIFIED)
+        if user.is_email_verified is False or user.is_phone_verified is False:
+            errors['email'] = error_messages.EMAIL_NOT_VERIFIED if user.is_email_verified is False else None
+            errors['phonenumber'] = error_messages.PHONE_NOT_VERIFIED if user.is_phone_verified is False else None
+            raise PermissionDenied(str(remove_dict_none_values(errors)))
 
         if not check_password(kwargs.get("PIN"), user.pin):
-            raise ValidationError(error_messages.WRONG_CREDENTAILS)
+            raise PermissionDenied(error_messages.WRONG_CREDENTAILS)
         return user

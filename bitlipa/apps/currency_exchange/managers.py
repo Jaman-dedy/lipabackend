@@ -4,19 +4,17 @@ from bitlipa.resources import error_messages
 from django.core.exceptions import ValidationError
 
 from bitlipa.utils.to_decimal import to_decimal
+from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 
 
 class CurrencyExchangeManager(models.Manager):
     def create_exchange_rate(self, **kwargs):
         currency_exchange = self.model()
         errors = {}
+        errors['currency'] = error_messages.REQUIRED.format('currency is ') if not kwargs.get('currency') else None
+        errors['rate'] = error_messages.REQUIRED.format('exchange rate is ') if not kwargs.get('rate') else None
 
-        if not kwargs.get('currency'):
-            errors['currency'] = error_messages.REQUIRED.format('currency is ')
-        if not kwargs.get('rate'):
-            errors['rate'] = error_messages.REQUIRED.format('exchange rate is ')
-
-        if len(errors) != 0:
+        if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
         currency_exchange.base_currency = kwargs.get('base_currency', moneyed.USD)
@@ -30,15 +28,11 @@ class CurrencyExchangeManager(models.Manager):
 
     def convert(self, **kwargs):
         errors = {}
+        errors['base_currency'] = error_messages.REQUIRED.format('base currency is ') if not kwargs.get('base_currency') else None
+        errors['currency'] = error_messages.REQUIRED.format('currency is ') if not kwargs.get('currency') else None
+        errors['amount'] = error_messages.REQUIRED.format('amount is ') if not kwargs.get('amount') else None
 
-        if not kwargs.get('base_currency'):
-            errors['base_currency'] = error_messages.REQUIRED.format('base currency is ')
-        if not kwargs.get('currency'):
-            errors['currency'] = error_messages.REQUIRED.format('currency is ')
-        if not kwargs.get('amount'):
-            errors['amount'] = error_messages.REQUIRED.format('amount is ')
-
-        if len(errors) != 0:
+        if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
         try:
