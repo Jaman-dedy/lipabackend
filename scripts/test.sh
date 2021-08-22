@@ -1,3 +1,3 @@
 #!/bin/bash
 
-DEBUG=False python3 manage.py test ${1}
+DEBUG=False python3 manage.py test ${@}
