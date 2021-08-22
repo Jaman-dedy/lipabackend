@@ -18,8 +18,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'is_admin',
                   'is_email_verified',
                   'is_phone_verified',
+                  'otp',
+                  'device_id',
+                  'firebase_token',
                   'created_at',
-                  'updated_at'
+                  'updated_at',
+                  'deleted_at'
                   ]
 
     def to_representation(self, instance):
