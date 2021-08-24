@@ -45,15 +45,17 @@ THRESH0LD_API = env('THRESH0LD_API', default='')
 # BEYONIC
 BEYONIC_API = env('BEYONIC_API', default='')
 BEYONIC_API_TOKEN = env('BEYONIC_API_TOKEN', default='')
-<<<<<<< HEAD
 # FIXER RAPID API
 FIXER_RAPID_API_URL = env('FIXER_RAPID_API_URL', default='')
 FIXER_RAPID_API_KEY = env('FIXER_RAPID_API_KEY', default='')
 FIXER_RAPID_API_HOST = env('FIXER_RAPID_API_HOST', default='')
+# ISPIRAL KYC
+KYC_ISPIRAL_API = env('KYC_ISPIRAL_API', default='')
+KYC_ISPIRAL_CLIENT_ID = env('KYC_ISPIRAL_CLIENT_ID', default='')
+KYC_ISPIRAL_CLIENT_SECRET = env('KYC_ISPIRAL_CLIENT_SECRET', default='')
+KYC_ISPIRAL_GRANT_TYPE = env('KYC_ISPIRAL_GRANT_TYPE', default='')
 
-=======
 FIREBASE_SERVICE_ACCOUNT_FILE_PATH = env('FIREBASE_SERVICE_ACCOUNT_FILE_PATH', default='')
->>>>>>> (Bitlipa): push notification
 
 # Application definition
 INSTALLED_APPS = [
@@ -75,7 +77,8 @@ INSTALLED_APPS = [
     'bitlipa.apps.crypto_wallets',
     'bitlipa.apps.transactions',
     'bitlipa.apps.currency_exchange',
-    'bitlipa.apps.fees'
+    'bitlipa.apps.fees',
+    'bitlipa.apps.ispiral_kyc'
 ]
 
 MIDDLEWARE = [
