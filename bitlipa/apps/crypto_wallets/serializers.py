@@ -1,11 +1,12 @@
 from rest_framework import serializers
+from bitlipa.utils.get_object_attr import get_object_attr
 
 from bitlipa.apps.users.serializers import BasicUserSerializer
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
 
 
 class CryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
-    user = BasicUserSerializer(data={'include_wallets': False})
+    user = BasicUserSerializer(context={'include_wallets': True})
 
     class Meta:
         model = CryptoWallet
@@ -25,9 +26,15 @@ class CryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
                   'created_at',
                   'updated_at', ]
 
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        if get_object_attr(self, 'context', {}).get('include_user') is not True:
+            del result['user']
+        return result
+
 
 class BasicCryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
-    user = BasicUserSerializer(data={'include_wallets': False})
+    user = BasicUserSerializer(context={'include_wallets': True})
 
     class Meta:
         model = CryptoWallet
@@ -44,3 +51,9 @@ class BasicCryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
                   'logo_url',
                   'is_master',
                   ]
+
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        if get_object_attr(self, 'context', {}).get('include_user') is not True:
+            del result['user']
+        return result

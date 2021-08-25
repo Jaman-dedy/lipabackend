@@ -58,7 +58,8 @@ class UserViewSet(viewsets.ViewSet):
 
         if not user and not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
-        user_data = UserSerializer(user).data if user.id == request.user.id else BasicUserSerializer(user).data
+        user_data = UserSerializer(user, context={'include_wallets': True}).data if user.id == request.user.id \
+            else BasicUserSerializer(user, context={'include_wallets': True}).data
         return http_response(status=status.HTTP_200_OK, data=user_data)
 
     # update user

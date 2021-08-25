@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.http import HttpResponse
+from django.db import transaction as db_transaction
 
 from bitlipa.resources import error_messages
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
@@ -29,9 +30,16 @@ class TransactionViewSet(viewsets.ViewSet):
             return self.create_transaction(request)
 
     @action(methods=['post'], detail=False, url_path='send-funds', url_name='send_funds')
+    @db_transaction.atomic
     def send_funds(self, request):
         AuthUtil.is_auth(request)
-        data = Transaction.objects.send_funds(user=request.user, **request.data)
+        serializer = TransactionSerializer(Transaction.objects.send_funds(user=request.user, **request.data))
+        return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+    @action(methods=['post'], detail=False, url_path='send-crypto-funds', url_name='send_crypto_funds')
+    def send_crypto_funds(self, request):
+        AuthUtil.is_auth(request)
+        data = Transaction.objects.send_crypto_funds(user=request.user, **request.data)
         return http_response(status=status.HTTP_201_CREATED, data=data)
 
     @action(methods=['post'], detail=False, url_path='topup-funds', url_name='topup_funds')
@@ -52,22 +60,15 @@ class TransactionViewSet(viewsets.ViewSet):
         logger(request.data, 'info')
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
-    def create_transaction(self, request):
-        AuthUtil.is_auth(request)
-        serializer = TransactionSerializer(Transaction.objects.create_or_update_transaction(**request.data))
-        return http_response(status=status.HTTP_200_OK, data=serializer.data)
-
-    @action(methods=['post'], detail=False, url_path='callback', url_name='create_or_update_transaction')
-    def create_or_update_transaction(self, request):
-        # TODO: Remove logs
-        logger(request.data, 'info')
-        TransactionSerializer(Transaction.objects.create_or_update_transaction(**request.data))
+    @action(methods=['post'], detail=False, url_path='callback', url_name='create_or_update_crypto_transaction')
+    def create_or_update_crypto_transaction(self, request):
+        TransactionSerializer(Transaction.objects.create_or_update_crypto_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
     @action(methods=['post'], detail=False, url_path='topup/callback', url_name='topup_transaction')
     def create_or_update_topup_transaction(self, request):
         # TODO: Remove logs
-        # logger(request.data, 'info')
+        logger(request.data, 'info')
         TransactionSerializer(Transaction.objects.create_or_update_topup_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
