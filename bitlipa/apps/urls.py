@@ -12,4 +12,5 @@ urlpatterns = [
     path('', include('bitlipa.apps.crypto_wallets.urls')),
     path('', include('bitlipa.apps.transactions.urls')),
     path('', include('bitlipa.apps.currency_exchange.urls')),
+    path('', include('bitlipa.apps.fees.urls')),
 ]
