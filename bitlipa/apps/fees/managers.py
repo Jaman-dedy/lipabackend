@@ -73,3 +73,8 @@ class FeeManager(models.Manager):
 
         fee.save(using=self._db)
         return fee
+
+    def remove(self, id=None):
+        fee = self.model.objects.get(id=id)
+        fee.delete()
+        return fee

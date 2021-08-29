@@ -75,26 +75,26 @@ class FeeCrudAPIViewTestCase(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('data', response_content)
 
-    # def test_get_fees(self):
-    #     token = JWTUtil.encode({'email': self.user.email})
-    #     headers = {'HTTP_Authorization': f'Bearer {token}'}
-    #     response = self.client.get(self.url, content_type='application/json', **headers)
-    #     response_content = json.loads(response.content)
-    #     self.assertEqual(status.HTTP_200_OK, response.status_code)
-    #     self.assertIn('data', response_content)
+    def test_get_fees(self):
+        token = JWTUtil.encode({'email': self.user.email})
+        headers = {'HTTP_Authorization': f'Bearer {token}'}
+        response = self.client.get(self.url, content_type='application/json', **headers)
+        response_content = json.loads(response.content)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertIn('data', response_content)
 
-    # def test_get_one_fee(self):
-    #     token = JWTUtil.encode({'email': self.user.email})
-    #     headers = {'HTTP_Authorization': f'Bearer {token}'}
-    #     response = self.client.get(f'{self.url}{self.default_fee.id}/', content_type='application/json', **headers)
-    #     response_content = json.loads(response.content)
-    #     self.assertEqual(status.HTTP_200_OK, response.status_code)
-    #     self.assertIn('data', response_content)
+    def test_get_one_fee(self):
+        token = JWTUtil.encode({'email': self.user.email})
+        headers = {'HTTP_Authorization': f'Bearer {token}'}
+        response = self.client.get(f'{self.url}{self.default_fee.id}/', content_type='application/json', **headers)
+        response_content = json.loads(response.content)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertIn('data', response_content)
 
-    # def test_delete_fee(self):
-    #     token = JWTUtil.encode({'email': self.user.email})
-    #     headers = {'HTTP_Authorization': f'Bearer {token}'}
-    #     response = self.client.delete(f'{self.url}{self.default_fee.id}/', content_type='application/json', **headers)
-    #     response_content = json.loads(response.content)
-    #     self.assertEqual(status.HTTP_200_OK, response.status_code)
-    #     self.assertIn('data', response_content)
+    def test_delete_fee(self):
+        token = JWTUtil.encode({'email': self.user.email})
+        headers = {'HTTP_Authorization': f'Bearer {token}'}
+        response = self.client.delete(f'{self.url}{self.default_fee.id}/', content_type='application/json', **headers)
+        response_content = json.loads(response.content)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertIn('data', response_content)
