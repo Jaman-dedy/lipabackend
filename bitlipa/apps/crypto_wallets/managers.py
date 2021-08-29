@@ -10,32 +10,29 @@ from rest_framework import status
 
 from bitlipa.resources import constants
 from bitlipa.resources import error_messages
-from bitlipa.utils.list_utils import filter_list
 from bitlipa.utils.to_int import to_int
 from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.http_request import http_request
+from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.cybavo_checksum import CYBAVOChecksum
 
 
 class CryptoWalletManager(models.Manager):
     def list(self, user=None, **kwargs):
+        page = to_int(kwargs.get('page'), 1)
+        per_page = to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT)
+        table_fields = {**kwargs, 'deleted_at': None, 'user_id': get_object_attr(user, "id")}
 
-        table_fields = {}
-        (page, per_page) = (to_int(kwargs.get('page'), 1), to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT))
+        for key in ['all', 'page', 'per_page']:
+            table_fields.pop(key, None)  # remove fields not in the DB table
 
-        if 'is_master' in kwargs and kwargs.get('all'):
-            kwargs.pop('is_master')
-
-        for key in filter_list(kwargs.keys(), values_to_exclude=['all', 'page', 'per_page']):
-            if kwargs[key] is not None:
-                table_fields[key] = kwargs[key]
-
-        table_fields['user_id'] = user.id
+        if kwargs.get('all'):
+            table_fields.pop('is_master', None)
 
         if (get_object_attr(user, "is_admin") and kwargs.get('all')) or kwargs.get('is_master'):
-            table_fields.pop('user_id')
+            table_fields.pop('user_id', None)
 
-        object_list = self.model.objects.filter(**{'deleted_at': None, **table_fields}).order_by('-created_at')
+        object_list = self.model.objects.filter(**remove_dict_none_values(table_fields)).order_by('-created_at')
         return {
             'data': Paginator(object_list, per_page).page(page).object_list,
             'meta': {

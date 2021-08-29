@@ -1,13 +1,12 @@
 from rest_framework import serializers
 
 from bitlipa.apps.transactions.models import Transaction
-from bitlipa.apps.users.serializers import UserSerializer
+from bitlipa.apps.users.serializers import BasicUserSerializer
 
 
 class TransactionSerializer(serializers.HyperlinkedModelSerializer):
 
-    (sender, receiver) = (UserSerializer(data = {'include_wallets': False}), 
-                          UserSerializer(data = {'include_wallets': False}))
+    (sender, receiver) = (BasicUserSerializer(), BasicUserSerializer())
 
     class Meta:
         model = Transaction

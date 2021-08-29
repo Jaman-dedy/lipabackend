@@ -1,7 +1,8 @@
-from bitlipa.utils.get_object_attr import get_object_attr
 from rest_framework import serializers
 
+from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.apps.users.models import User
+from bitlipa.apps.fiat_wallet.models import FiatWallet
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
 
 
@@ -20,6 +21,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'is_phone_verified',
                   'device_id',
                   'firebase_token',
+                  'country',
+                  'country_code',
+                  'local_currency',
                   'created_at',
                   'updated_at',
                   'deleted_at'
@@ -28,36 +32,21 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     def to_representation(self, instance):
         return {
             **super().to_representation(instance),
-            'crypto_wallets': None if get_object_attr(self, 'initial_data', {}).get('include_wallets') is False else
-            CryptoWallet.objects.filter(user=instance, is_master=False).values()
-        }
+            'fiat_wallets': FiatWallet.objects.filter(user=instance).values(),
+            'crypto_wallets': CryptoWallet.objects.filter(user=instance, is_master=False).values(),
+        } if get_object_attr(self, 'context', {}).get('include_wallets') is True else super().to_representation(instance)
 
 
 class BasicUserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id',
-                  'first_name',
-                  'middle_name',
-                  'last_name',
-                  'phonenumber',
-                  'email',
-                  ]
+        fields = ['id', 'first_name', 'middle_name', 'last_name', 'phonenumber', 'email', 'country']
 
     def to_representation(self, instance):
-        return {
+        wallet_fields = ['id', 'name', 'type', 'wallet_id', 'currency', 'address', 'description', 'logo_url']
+        return{
             **super().to_representation(instance),
-            'crypto_wallets': None if get_object_attr(self, 'initial_data', {}).get('include_wallets') is False else
-            CryptoWallet.objects.filter(user=instance, is_master=False).values('id',
-                                                                               'user_id',
-                                                                               'name',
-                                                                               'type',
-                                                                               'wallet_id',
-                                                                               'order_id_prefix',
-                                                                               'currency',
-                                                                               'address',
-                                                                               'description',
-                                                                               'logo_url',
-                                                                               'is_master')
-        }
+            'fiat_wallets': FiatWallet.objects.filter(user=instance).values(),
+            'crypto_wallets': CryptoWallet.objects.filter(user=instance, is_master=False).values(*wallet_fields)
+        } if get_object_attr(self, 'context', {}).get('include_wallets') is True else super().to_representation(instance)

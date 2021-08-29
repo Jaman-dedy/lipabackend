@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
 from bitlipa.resources import error_messages
+from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.utils.auth_util import AuthUtil
@@ -43,26 +44,27 @@ class WalletViewSet(viewsets.ViewSet):
     def list_wallets(self, request):
         AuthUtil.is_auth(request)
         kwargs = {
-            'page': request.GET.get('page'),
-            'per_page': request.GET.get('per_page'),
+            'page': str(request.GET.get('page')),
+            'per_page': str(request.GET.get('per_page')),
             'is_master': str(request.GET.get('master')).lower() == 'true' or str(request.GET.get('master')).lower() == '1',
             'all': str(request.GET.get('all')).lower() == 'true' or str(request.GET.get('all')).lower() == '1',
             'name__iexact': request.GET.get('name'),
             'type__iexact': request.GET.get('type'),
         }
-
         result = CryptoWallet.objects.list(user=request.user, **kwargs)
-        serializer = CryptoWalletSerializer(result.get('data'), many=True)
+        serializer = CryptoWalletSerializer(
+            result.get('data'),
+            context={'include_user': get_object_attr(request.user, 'is_admin', False)},
+            many=True)
         return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
 
     # get one wallet
     def retrieve(self, request, pk=None):
         AuthUtil.is_auth(request)
 
-        crypto_wallet = CryptoWallet.objects.get(id=pk) if is_valid_uuid(pk) else\
-            CryptoWallet.objects.get(address=pk)
-        serializer = CryptoWalletSerializer(crypto_wallet) if crypto_wallet.user_id == request.user.id\
-            else BasicCryptoWalletSerializer(crypto_wallet)
+        crypto_wallet = CryptoWallet.objects.get(id=pk) if is_valid_uuid(pk) else CryptoWallet.objects.get(address=pk)
+        serializer = CryptoWalletSerializer(crypto_wallet) if crypto_wallet.user_id == request.user.id else \
+            BasicCryptoWalletSerializer(crypto_wallet, context={'include_user': True})
 
         return http_response(status=status.HTTP_200_OK, data=serializer.data)
 

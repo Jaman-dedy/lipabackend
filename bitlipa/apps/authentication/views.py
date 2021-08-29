@@ -85,10 +85,11 @@ class AuthViewSet(viewsets.ViewSet):
     def login_user(self, request):
         user = User.objects.login(**request.data)
         if get_object_attr(user, 'otp'):
-            content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
-            send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], fail_silently=False, html_message=content)
+            if not settings.DEBUG:
+                content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
+                send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], fail_silently=False, html_message=content)
             return http_response(status=status.HTTP_401_UNAUTHORIZED, data={"message": success_messages.CONFIRM_LOGIN})
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={'include_wallets': True})
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, expiration_hours=24)
         return http_response(status=status.HTTP_200_OK, data={
             "user": serializer.data,

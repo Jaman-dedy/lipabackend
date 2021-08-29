@@ -21,6 +21,7 @@ class User(models.Model):
     firebase_token = models.CharField(verbose_name=_("Firebase token"), max_length=255, blank=True, null=True)
     country = models.CharField(verbose_name=_("country"), max_length=100, blank=True, null=True)
     country_code = models.CharField(verbose_name=_("country code"), max_length=6, blank=True, null=True)
+    local_currency = models.CharField(verbose_name=_("local currency"), max_length=6, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
     deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)

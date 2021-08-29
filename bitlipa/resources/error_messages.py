@@ -19,6 +19,9 @@ PHONE_NOT_VERIFIED = "phone number not verified"
 # user
 PHONE_NUMBER_TAKEN = "user with this phone number{} already exists"
 EMAIL_TAKEN = "user with this email{} already exists"
-
-# login
 WRONG_CREDENTAILS = "wrong email or pin"
+
+# transactions
+INVALID_AMOUNT = "amount can not be a negative number or 0"
+INSUFFICIENT_FUNDS = "You do not have enough funds. Please top-up your wallet to perform this transaction"
+SAME_SOURCE_TARGET_WALLET = "The source and target wallet can not be the same"

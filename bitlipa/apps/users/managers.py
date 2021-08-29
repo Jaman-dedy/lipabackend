@@ -9,7 +9,6 @@ from django.db import models
 from bitlipa.resources import constants
 from bitlipa.resources import error_messages
 from bitlipa.utils.to_int import to_int
-from bitlipa.utils.list_utils import filter_list
 from bitlipa.utils.validator import Validator
 from bitlipa.apps.otp.models import OTP
 from bitlipa.utils.send_sms import send_sms
@@ -18,14 +17,14 @@ from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 
 class UserManager(BaseUserManager):
     def list(self, user=None, **kwargs):
-        table_fields = {}
-        (page, per_page) = (to_int(kwargs.get('page'), 1), to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT))
+        table_fields = {**kwargs}
+        page = to_int(kwargs.get('page'), 1)
+        per_page = to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT)
 
-        for key in filter_list(kwargs.keys(), values_to_exclude=['page', 'per_page']):
-            if kwargs[key] is not None:
-                table_fields[key] = kwargs[key]
+        for key in ['page', 'per_page']:
+            table_fields.pop(key, None)  # remove fields not in the DB table
 
-        query = models.Q(**{'deleted_at': None, **table_fields})
+        query = models.Q(**{'deleted_at': None, **remove_dict_none_values(table_fields)})
 
         object_list = self.model.objects.filter(query).order_by('-created_at')
         data = Paginator(object_list, per_page).page(page).object_list
@@ -111,6 +110,7 @@ class UserManager(BaseUserManager):
         user.firebase_token = kwargs.get('firebase_token', user.firebase_token)
         user.country = kwargs.get('country', user.country)
         user.country_code = kwargs.get('country_code', user.country_code)
+        user.local_currency = kwargs.get('local_currency', user.local_currency)
 
         if not user.pin and kwargs.get('PIN'):
             user.pin = make_password(kwargs.get('PIN'))
@@ -140,13 +140,14 @@ class UserManager(BaseUserManager):
                              destination=OTP.OTPDestinations.EMAIL)
 
     def check_login_from_different_country(user, **kwargs):
-        if user.country and not kwargs.get('OTP') and kwargs.get('country', '').lower() != user.country.lower():
+        new_country = kwargs.get('country')
+        if new_country and user.country and not kwargs.get('OTP') and str(new_country).lower() != user.country.lower():
             return OTP.objects.save(email=user.email,
                                     phonenumber=user.phonenumber,
                                     digits=4,
                                     destination=OTP.OTPDestinations.EMAIL)
 
-        if user.country and kwargs.get('OTP') and kwargs.get('country', '').lower() != user.country.lower():
+        if new_country and user.country and kwargs.get('OTP') and str(new_country).lower() != user.country.lower():
             OTP.objects.find(otp=kwargs.get('OTP'),
                              email=user.email,
                              phonenumber=user.phonenumber,
@@ -170,8 +171,10 @@ class UserManager(BaseUserManager):
 
         OTP.objects.remove_all(email=user.email, phonenumber=user.phonenumber, destination=OTP.OTPDestinations.EMAIL)
 
-        user.device_id = kwargs.get('device_id')
-        user.country = kwargs.get('country')
+        user.device_id = kwargs.get('device_id') or user.device_id
+        user.country = kwargs.get('country') or user.country
+        user.country_code = kwargs.get('country_code') or user.country_code
+        user.local_currency = kwargs.get('local_currency') or user.local_currency
         user.save(using=self._db)
 
         if user.is_email_verified is False or user.is_phone_verified is False:
