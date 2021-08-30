@@ -6,6 +6,7 @@ from django.db import models
 from bitlipa.resources import constants
 from bitlipa.resources import error_messages
 from bitlipa.utils.to_int import to_int
+from bitlipa.utils.to_decimal import to_decimal
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 
 
@@ -51,6 +52,13 @@ class FeeManager(models.Manager):
 
         fee.save(using=self._db)
         return fee
+
+    def get_fee(self, **kwargs):
+        try:
+            fee = self.model.objects.get(**kwargs)
+            return fee
+        except self.model.DoesNotExist:
+            return self.model(amount=to_decimal(0))
 
     def update(self, id=None, **kwargs):
         errors = {}

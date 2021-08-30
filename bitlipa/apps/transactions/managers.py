@@ -21,6 +21,8 @@ from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.cybavo_checksum import CYBAVOChecksum
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
 from bitlipa.apps.fiat_wallet.models import FiatWallet
+from bitlipa.apps.fees.models import Fee
+from bitlipa.apps.currency_exchange.models import CurrencyExchange
 
 
 class TransactionManager(models.Manager):
@@ -74,9 +76,10 @@ class TransactionManager(models.Manager):
             target_wallet = FiatWallet.objects.get(
                 models.Q(**{'id' if is_valid_uuid(kwargs.get('target_wallet')) else 'number': kwargs.get('target_wallet')}))
 
-        tx_fees = to_decimal(0.05)  # TODO: implement dynamic fees
+        tx_fee = Fee.objects.get_fee(name__iexact="internal funds transfer")
+        fx_fee = 0
         tx_amount = to_decimal(kwargs.get('amount'))
-        tx_total_amount = tx_amount + tx_fees
+        tx_total_amount = tx_amount + tx_fee.amount
 
         errors['amount'] = error_messages.INVALID_AMOUNT if tx_amount <= 0 else None
         errors['source_wallet'] = error_messages.INSUFFICIENT_FUNDS if source_wallet.balance.amount - tx_total_amount <= 0 else None
@@ -87,18 +90,29 @@ class TransactionManager(models.Manager):
 
         # debit sender wallet
         source_wallet.balance.amount -= tx_total_amount
+
         # credit receiver wallet
-        target_wallet.balance.amount += tx_amount if source_wallet.currency == target_wallet.currency else tx_amount  # TODO: implement currency exchange
-        source_wallet.save()
-        target_wallet.save()
+        if source_wallet.currency == target_wallet.currency:
+            target_wallet.balance.amount += tx_amount
+        else:
+            currency_exchange = CurrencyExchange.objects.convert(**{
+                'amount': tx_amount,
+                'base_currency': source_wallet.currency,
+                'currency': target_wallet.currency
+            })
+            fx_fee = currency_exchange.get('fee')
+            tx_amount = to_decimal(currency_exchange.get('amount'))
+            target_wallet.balance.amount += to_decimal(currency_exchange.get('amount'))
 
         transaction.type = constants.INTERNAL_USERS_TRANSACTION
         # transaction.wallet_id = kwargs.get('wallet_id')
         # transaction.order_id = kwargs.get('order_id')
         # transaction.serial = kwargs.get('serial')
         transaction.transaction_id = uuid.uuid4().hex
-        transaction.currency = kwargs.get("currency", constants.BTC)
-        transaction.fees = tx_fees or 0
+        transaction.from_currency = source_wallet.currency
+        transaction.to_currency = target_wallet.currency
+        transaction.fee = tx_fee.amount or 0
+        transaction.fx_fee = fx_fee or 0
         transaction.amount = tx_amount or 0
         transaction.total_amount = tx_total_amount
         transaction.from_address = get_object_attr(source_wallet, 'address', get_object_attr(source_wallet, 'number'))
@@ -108,7 +122,10 @@ class TransactionManager(models.Manager):
         transaction.sender = source_wallet.user
         transaction.receiver = target_wallet.user
 
-        transaction.save(using=self._db)
+        if kwargs.get('send') is True:
+            source_wallet.save()
+            target_wallet.save()
+            transaction.save(using=self._db)
 
         return transaction
 
@@ -219,9 +236,9 @@ class TransactionManager(models.Manager):
         tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
         tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
         tx_id = data.get('id')
-        tx_fees = to_decimal(data.get('fees', 0))
+        tx_fee = to_decimal(data.get('fee', 0))
         tx_amount = to_decimal(data.get('amount'))
-        tx_total_amount = data.get('total_amount', tx_amount + tx_fees)
+        tx_total_amount = data.get('total_amount', tx_amount + tx_fee)
 
         try:
             transaction = tx_model.objects.get(transaction_id=tx_id, serial=kwargs.get('event'))
@@ -241,7 +258,7 @@ class TransactionManager(models.Manager):
         transaction.currency = user_wallet.currency
         transaction.description = kwargs.get('description')
         transaction.state = data.get('status')
-        transaction.fees = tx_fees or 0
+        transaction.fee = tx_fee or 0
         transaction.amount = tx_amount or 0
         transaction.total_amount = tx_total_amount
         transaction.from_address = data.get('phone_number')
@@ -286,7 +303,7 @@ class TransactionManager(models.Manager):
                 'memo': data.get('memo'),
                 'message': data.get('message'),
                 'block_average_fee': data.get('block_average_fee'),
-                'manual_fee': data.get('manual_fee', data.get('fees'))
+                'manual_fee': data.get('manual_fee', data.get('fee'))
             })
 
         payload = json.dumps({'requests': requests})
@@ -316,9 +333,9 @@ class TransactionManager(models.Manager):
         except tx_model.DoesNotExist:
             transaction = tx_model()
 
-        tx_fees = to_decimal(kwargs.get('fees', transaction.fees.amount)) * (1 / 10**to_decimal(kwargs.get('decimal'), 8))
+        tx_fee = to_decimal(kwargs.get('fee', transaction.fee.amount)) * (1 / 10**to_decimal(kwargs.get('decimal'), 8))
         tx_amount = to_decimal(kwargs.get('amount', transaction.amount.amount)) * (1 / 10**to_decimal(kwargs.get('decimal'), 8))
-        tx_total_amount = kwargs.get('total_amount', tx_amount + tx_fees)
+        tx_total_amount = kwargs.get('total_amount', tx_amount + tx_fee)
 
         crypto_wallets = CryptoWallet.objects.filter(wallet_id=kwargs.get('wallet_id'),
                                                      address__in=[kwargs.get('from_address'), kwargs.get('to_address')])
@@ -346,7 +363,7 @@ class TransactionManager(models.Manager):
         transaction.vout_index = kwargs.get('vout_index', transaction.vout_index)
         transaction.transaction_id = kwargs.get('txid', kwargs.get('transaction_id', transaction.transaction_id))
         transaction.currency = kwargs.get("currency", constants.BTC)
-        transaction.fees = tx_fees or 0
+        transaction.fee = tx_fee or 0
         transaction.amount = tx_amount or 0
         transaction.total_amount = tx_total_amount
         transaction.from_address = kwargs.get('from_address', transaction.from_address)

@@ -1,6 +1,7 @@
 from django.conf import settings
 from contextlib import suppress
 from django.db.utils import IntegrityError
+import moneyed
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.core.mail import send_mail
@@ -10,6 +11,8 @@ from django.core import exceptions as core_exceptions
 
 from bitlipa.resources import success_messages
 from bitlipa.utils.jwt_util import JWTUtil
+from bitlipa.apps.fiat_wallet.models import FiatWallet
+from bitlipa.apps.fiat_wallet.serializers import FiatWalletSerializer
 from bitlipa.apps.users.models import User
 from bitlipa.apps.users.serializers import UserSerializer
 from bitlipa.resources import error_messages
@@ -85,12 +88,21 @@ class AuthViewSet(viewsets.ViewSet):
     def login_user(self, request):
         user = User.objects.login(**request.data)
         if get_object_attr(user, 'otp'):
-            if not settings.DEBUG:
-                content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
-                send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], fail_silently=False, html_message=content)
-            return http_response(status=status.HTTP_401_UNAUTHORIZED, data={"message": success_messages.CONFIRM_LOGIN})
+            content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
+            send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], fail_silently=False, html_message=content)
+            return http_response(status=status.HTTP_401_UNAUTHORIZED, data={"is_otp_required": True, "message": success_messages.CONFIRM_LOGIN})
         serializer = UserSerializer(user, context={'include_wallets': True})
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, expiration_hours=24)
+        if not len(serializer.data.get('fiat_wallets')) and user.local_currency:
+            fiat_wallet = FiatWallet.objects.create_wallet(user=user, **{
+                'name': 'Personal', 'currency': moneyed.get_currencies_of_country(user.country_code)[0]})
+            return http_response(status=status.HTTP_200_OK, data={
+                "user": {
+                    **serializer.data,
+                    'fiat_wallets': [FiatWalletSerializer(fiat_wallet).data]
+                },
+                "token": user_token
+            })
         return http_response(status=status.HTTP_200_OK, data={
             "user": serializer.data,
             "token": user_token
