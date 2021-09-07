@@ -1,3 +1,4 @@
+from contextlib import suppress
 from django.conf import settings
 from django.contrib.auth.models import BaseUserManager
 from django.core.paginator import Paginator
@@ -5,6 +6,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.validators import RegexValidator
 from django.db import models
+import moneyed
 
 from bitlipa.resources import constants
 from bitlipa.resources import error_messages
@@ -60,7 +62,8 @@ class UserManager(BaseUserManager):
         Validator.validate_phonenumber(kwargs.get('phonenumber'))
 
         if kwargs.get('OTP'):
-            otp_obj = OTP.objects.find(otp=kwargs.get('OTP'), email=email, phonenumber=kwargs.get('phonenumber'))
+            otp_obj = OTP.objects.find(
+                otp=kwargs.get('OTP'), email=email, phonenumber=kwargs.get('phonenumber'), destination=OTP.OTPDestinations.SMS)
             user.phonenumber = kwargs.get('phonenumber')
             user.is_phone_verified = True
             user.save(using=self._db)
@@ -175,6 +178,11 @@ class UserManager(BaseUserManager):
         user.country = kwargs.get('country') or user.country
         user.country_code = kwargs.get('country_code') or user.country_code
         user.local_currency = kwargs.get('local_currency') or user.local_currency
+
+        if not user.local_currency and user.country_code:
+            with suppress(Exception):
+                user.local_currency = moneyed.get_currencies_of_country(user.country_code)[0]
+
         user.save(using=self._db)
 
         if user.is_email_verified is False or user.is_phone_verified is False:

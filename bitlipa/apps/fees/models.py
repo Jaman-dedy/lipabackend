@@ -22,6 +22,9 @@ class Fee(models.Model):
 
     objects = FeeManager()
 
+    def __str__(self):
+        return self.amount
+
     class Meta:
         db_table = "fees"
         ordering = ("created_at", "updated_at")
