@@ -70,7 +70,8 @@ INSTALLED_APPS = [
     'bitlipa.apps.fiat_wallet',
     'bitlipa.apps.crypto_wallets',
     'bitlipa.apps.transactions',
-    'bitlipa.apps.currency_exchange'
+    'bitlipa.apps.currency_exchange',
+    'bitlipa.apps.fees'
 ]
 
 MIDDLEWARE = [
