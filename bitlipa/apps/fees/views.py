@@ -25,7 +25,7 @@ class WalletViewSet(viewsets.ViewSet):
 
     def create_fee(self, request):
         AuthUtil.is_auth(request)
-        serializer = FeeSerializer(Fee.objects.create_fee(user=request.user, **request.data))
+        serializer = FeeSerializer(Fee.objects.create_fee(**request.data))
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def list_fees(self, request):
@@ -36,7 +36,7 @@ class WalletViewSet(viewsets.ViewSet):
             'name__iexact': request.GET.get('name'),
             'type__iexact': request.GET.get('type'),
         }
-        result = Fee.objects.list(user=request.user, **kwargs)
+        result = Fee.objects.list(**kwargs)
         serializer = FeeSerializer(result.get('data'), many=True)
         return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
 

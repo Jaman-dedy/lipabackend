@@ -10,7 +10,7 @@ from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 
 
 class FeeManager(models.Manager):
-    def list(self, user=None, **kwargs):
+    def list(self, **kwargs):
         page = to_int(kwargs.get('page'), 1)
         per_page = to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT)
         table_fields = {**kwargs, 'deleted_at': None}
