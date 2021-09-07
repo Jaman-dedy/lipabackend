@@ -68,6 +68,6 @@ class WalletViewSet(viewsets.ViewSet):
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('fee '))
 
-        fee = Fee.objects.delete(id=pk)
+        fee = Fee.objects.remove(id=pk)
         serializer = FeeSerializer(fee)
         return http_response(status=status.HTTP_200_OK, data=serializer.data)
