@@ -45,11 +45,15 @@ THRESH0LD_API = env('THRESH0LD_API', default='')
 # BEYONIC
 BEYONIC_API = env('BEYONIC_API', default='')
 BEYONIC_API_TOKEN = env('BEYONIC_API_TOKEN', default='')
+<<<<<<< HEAD
 # FIXER RAPID API
 FIXER_RAPID_API_URL = env('FIXER_RAPID_API_URL', default='')
 FIXER_RAPID_API_KEY = env('FIXER_RAPID_API_KEY', default='')
 FIXER_RAPID_API_HOST = env('FIXER_RAPID_API_HOST', default='')
 
+=======
+FIREBASE_SERVICE_ACCOUNT_FILE_PATH = env('FIREBASE_SERVICE_ACCOUNT_FILE_PATH', default='')
+>>>>>>> (Bitlipa): push notification
 
 # Application definition
 INSTALLED_APPS = [
