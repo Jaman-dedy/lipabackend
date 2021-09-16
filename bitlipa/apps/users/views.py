@@ -38,7 +38,9 @@ class UserViewSet(viewsets.ViewSet):
         # update user
         if request.method == 'PUT':
             user = User.objects.update(email=request.decoded_token.get('email'), **request.data)
-            return http_response(status=status.HTTP_200_OK, data=UserSerializer(user).data)
+            user_data = UserSerializer(user, context={'include_wallets': True}).data if user.id == request.user.id \
+                else BasicUserSerializer(user, context={'include_wallets': True}).data
+            return http_response(status=status.HTTP_200_OK, data=user_data)
 
     # get one user
     def retrieve(self, request, pk=None, **kwargs):
@@ -69,5 +71,6 @@ class UserViewSet(viewsets.ViewSet):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
 
         user = User.objects.update(id=pk, **request.data)
-
-        return http_response(status=status.HTTP_200_OK, data=UserSerializer(user).data)
+        user_data = UserSerializer(user, context={'include_wallets': True}).data if user.id == request.user.id \
+            else BasicUserSerializer(user, context={'include_wallets': True}).data
+        return http_response(status=status.HTTP_200_OK, data=user_data)
