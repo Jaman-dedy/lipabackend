@@ -1,5 +1,6 @@
 from uuid import uuid4
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.utils.translation import gettext_lazy as _
 
 from .managers import UserManager
@@ -17,9 +18,13 @@ class User(models.Model):
     is_admin = models.BooleanField(verbose_name="is admin", blank=False, null=False, default=False)
     is_email_verified = models.BooleanField(verbose_name="is email verified", blank=False, null=False, default=False)
     is_phone_verified = models.BooleanField(verbose_name="is phone verified", blank=False, null=False, default=False)
+    is_account_verified = models.BooleanField(verbose_name="is account verified", blank=False, null=False, default=False)
     device_id = models.CharField(verbose_name=_("Device id"), max_length=30, blank=True, null=True)
     firebase_token = models.CharField(verbose_name=_("Firebase token"), max_length=255, blank=True, null=True)
+    selfie_picture_url = models.CharField(verbose_name=_("Selfie"), max_length=255, blank=True, null=True)
+    document_url = ArrayField(models.CharField(verbose_name=_("Documents"), max_length=255), blank=True, null=True)
     country = models.CharField(verbose_name=_("country"), max_length=100, blank=True, null=True)
+    status = models.CharField(verbose_name=_("status"), max_length=100, blank=True, null=True)
     country_code = models.CharField(verbose_name=_("country code"), max_length=6, blank=True, null=True)
     local_currency = models.CharField(verbose_name=_("local currency"), max_length=6, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
