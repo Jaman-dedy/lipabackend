@@ -45,7 +45,7 @@ class BasicUserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'middle_name', 'last_name', 'phonenumber', 'email', 'country']
+        fields = ['id', 'first_name', 'middle_name', 'last_name', 'phonenumber', 'email', 'country', 'selfie_picture_url', 'document_url', 'status', 'is_account_verified']
 
     def to_representation(self, instance):
         wallet_fields = ['id', 'name', 'type', 'wallet_id', 'currency', 'address', 'description', 'logo_url']
