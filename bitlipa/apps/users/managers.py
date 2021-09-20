@@ -114,6 +114,10 @@ class UserManager(BaseUserManager):
         user.country = kwargs.get('country', user.country)
         user.country_code = kwargs.get('country_code', user.country_code)
         user.local_currency = kwargs.get('local_currency', user.local_currency)
+        user.document_url = kwargs.get('document_url', user.document_url)
+        user.selfie_picture_url = kwargs.get('selfie_picture_url', user.selfie_picture_url)
+        user.is_account_verified = kwargs.get('is_account_verified', user.is_account_verified)
+        user.status = kwargs.get('status', user.status)
 
         if not user.pin and kwargs.get('PIN'):
             user.pin = make_password(kwargs.get('PIN'))
