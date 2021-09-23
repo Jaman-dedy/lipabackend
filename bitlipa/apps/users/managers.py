@@ -197,3 +197,23 @@ class UserManager(BaseUserManager):
         if not check_password(kwargs.get("PIN"), user.pin):
             raise PermissionDenied(error_messages.WRONG_CREDENTAILS)
         return user
+
+    def login_admin(self, **kwargs):
+        errors = {}
+        errors['email'] = error_messages.REQUIRED.format('Email is ') if not kwargs.get('email') else None
+        errors['password'] = error_messages.REQUIRED.format('password is ') if not kwargs.get('password') else None
+
+        if len(remove_dict_none_values(errors)) != 0:
+            raise ValidationError(str(errors))
+
+        user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+
+        if user.is_email_verified is False or user.is_phone_verified is False or user.is_admin is False:
+            errors['email'] = error_messages.EMAIL_NOT_VERIFIED if user.is_email_verified is False else None
+            errors['phonenumber'] = error_messages.PHONE_NOT_VERIFIED if user.is_phone_verified is False else None
+            errors['is_admin'] = error_messages.ACCESS_DENIED if user.is_admin is False else None
+            raise PermissionDenied(str(remove_dict_none_values(errors)))
+
+        if not check_password(kwargs.get("password"), user.password):
+            raise PermissionDenied(error_messages.WRONG_CREDENTAILS)
+        return user

@@ -87,7 +87,6 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='login', url_name='login')
     def login_user(self, request):
-        send_notification(tokens=['ggggg'])
         user = User.objects.login(**request.data)
         if get_object_attr(user, 'otp'):
             content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
@@ -105,6 +104,17 @@ class AuthViewSet(viewsets.ViewSet):
                 },
                 "token": user_token
             })
+        return http_response(status=status.HTTP_200_OK, data={
+            "user": serializer.data,
+            "token": user_token
+        })
+
+    @action(methods=['post'], detail=False, url_path='admin/login', url_name='admin/login')
+    def login_admin(self, request):
+        user = User.objects.login_admin(**request.data)
+        serializer = UserSerializer(user)
+        user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, expiration_hours=24)
+
         return http_response(status=status.HTTP_200_OK, data={
             "user": serializer.data,
             "token": user_token
