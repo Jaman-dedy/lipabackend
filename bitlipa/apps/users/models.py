@@ -1,12 +1,15 @@
 from uuid import uuid4
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
 from django.utils.translation import gettext_lazy as _
 
 from .managers import UserManager
 
 
 class User(models.Model):
+    class DocumentTypes(models.TextChoices):
+        ID = 'ID', _('National ID')
+        PASSPORT = 'PASSPORT', _('Passport')
+
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     first_name = models.CharField(verbose_name=_("first name"), max_length=30, blank=True, null=True)
     middle_name = models.CharField(verbose_name=_("middle name"), max_length=30, blank=True, null=True)
@@ -21,8 +24,17 @@ class User(models.Model):
     is_account_verified = models.BooleanField(verbose_name="is account verified", blank=False, null=False, default=False)
     device_id = models.CharField(verbose_name=_("Device id"), max_length=30, blank=True, null=True)
     firebase_token = models.CharField(verbose_name=_("Firebase token"), max_length=255, blank=True, null=True)
+    picture_url = models.CharField(verbose_name=_("Profile picture"), max_length=255, blank=True, null=True)
+    document_type = models.CharField(verbose_name=_("Document type"),
+                                     max_length=10,
+                                     choices=DocumentTypes.choices,
+                                     default=DocumentTypes.ID,
+                                     blank=False,
+                                     null=False)
+    document_front_url = models.CharField(verbose_name=_("Front side of ID or Passport"), max_length=255, blank=True, null=True)
+    document_back_url = models.CharField(verbose_name=_("Back side of ID or Passport"), max_length=255, blank=True, null=True)
     selfie_picture_url = models.CharField(verbose_name=_("Selfie"), max_length=255, blank=True, null=True)
-    document_url = ArrayField(models.CharField(verbose_name=_("Documents"), max_length=255), blank=True, null=True)
+    proof_of_residence_url = models.CharField(verbose_name=_("Proof of residence"), max_length=255, blank=True, null=True)
     country = models.CharField(verbose_name=_("country"), max_length=100, blank=True, null=True)
     status = models.CharField(verbose_name=_("status"), max_length=100, blank=True, null=True)
     country_code = models.CharField(verbose_name=_("country code"), max_length=6, blank=True, null=True)
