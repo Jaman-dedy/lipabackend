@@ -132,3 +132,4 @@ dmypy.json
 
 staticfiles
 serviceAccount.json
+.DS_Store

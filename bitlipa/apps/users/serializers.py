@@ -20,8 +20,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'is_email_verified',
                   'is_phone_verified',
                   'is_account_verified',
+                  'picture_url',
+                  'document_type',
+                  'document_front_url',
+                  'document_back_url',
                   'selfie_picture_url',
-                  'document_url',
+                  'proof_of_residence_url',
                   'status',
                   'device_id',
                   'firebase_token',
@@ -30,8 +34,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'local_currency',
                   'created_at',
                   'updated_at',
-                  'deleted_at'
-                  ]
+                  'deleted_at']
 
     def to_representation(self, instance):
         return {
@@ -45,7 +48,21 @@ class BasicUserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'middle_name', 'last_name', 'phonenumber', 'email', 'country', 'selfie_picture_url', 'document_url', 'status', 'is_account_verified']
+        fields = ['id',
+                  'first_name',
+                  'middle_name',
+                  'last_name',
+                  'phonenumber',
+                  'email',
+                  'country',
+                  'picture_url',
+                  'document_type',
+                  'document_front_url',
+                  'document_back_url',
+                  'selfie_picture_url',
+                  'proof_of_residence_url',
+                  'status',
+                  'is_account_verified']
 
     def to_representation(self, instance):
         wallet_fields = ['id', 'name', 'type', 'wallet_id', 'currency', 'address', 'description', 'logo_url']
