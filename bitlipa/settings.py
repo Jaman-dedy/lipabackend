@@ -35,7 +35,7 @@ SECRET_KEY = env('SECRET_KEY', default='bitlipa-secret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default='*')
+ALLOWED_HOSTS = "*"
 
 API_URL = env('API_URL', default='http://localhost:8000/api/v1')
 APP_NAME = env('APP_NAME', default='BitLipa')
@@ -96,12 +96,11 @@ MIDDLEWARE = [
     'bitlipa.middlewares.http_error_handler.HTTPErrorHandler',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://192.168.1.77:3000',
-
-]
+if DEBUG is True:
+    CORS_ORIGIN_ALLOW_ALL = True
+else:
+    CORS_ORIGIN_ALLOW_ALL = False
+    CORS_ALLOWED_ORIGINS = env.list('ALLOWED_HOSTS', default=[])
 
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': lambda e, _: exec('raise e')
