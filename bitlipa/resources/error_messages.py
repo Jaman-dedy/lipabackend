@@ -19,7 +19,7 @@ PHONE_NOT_VERIFIED = "phone number not verified"
 # user
 PHONE_NUMBER_TAKEN = "user with this phone number{} already exists"
 EMAIL_TAKEN = "user with this email{} already exists"
-WRONG_CREDENTAILS = "wrong email or pin"
+WRONG_CREDENTAILS = "wrong email or PIN"
 
 # transactions
 INVALID_AMOUNT = "amount can not be a negative number or 0"

@@ -162,7 +162,7 @@ class UserVerifyEmailAPIViewTestCase(APITestCase):
              is_phone_verified=False,
              ).save()
 
-        token = JWTUtil.encode({'email': 'johnsmith2@example.com', "from_email": True}, expiration_hours=1 / 3600)
+        token = JWTUtil.encode({'email': 'johnsmith2@example.com', "from_email": True}, exp_hours=1 / 3600)
         time.sleep(2)  # sleep for 2 seconds
         url = reverse('auth-verify_email', args=[token])
         response = self.client.get(url)

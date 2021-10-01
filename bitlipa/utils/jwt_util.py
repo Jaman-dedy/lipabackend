@@ -8,10 +8,10 @@ from bitlipa.resources import error_messages
 
 
 class JWTUtil:
-    def encode(payload: dict, expiration_hours: int = 24) -> str:
+    def encode(payload: dict, exp_hours: int = 24) -> str:
         try:
             token = jwt.encode({
-                **payload, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=expiration_hours)
+                **payload, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=exp_hours)
             }, settings.SECRET_KEY, algorithm="HS256")
             return str(token, 'utf-8')
 
