@@ -36,7 +36,7 @@ class JWTUtilTestCase(TestCase):
 
     def test_decode_token_expired_token(self):
         try:
-            token = JWTUtil.encode(self.jwt_payload, expiration_hours=1 / 3600)
+            token = JWTUtil.encode(self.jwt_payload, exp_hours=1 / 3600)
             time.sleep(2)  # sleep for 2 seconds
             JWTUtil.decode(token)
         except Exception as e:
