@@ -32,6 +32,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'country',
                   'country_code',
                   'local_currency',
+                  'initial_pin_change_date',
+                  'pin_change_count',
+                  'is_account_blocked',
                   'created_at',
                   'updated_at',
                   'deleted_at']
@@ -62,7 +65,10 @@ class BasicUserSerializer(serializers.HyperlinkedModelSerializer):
                   'selfie_picture_url',
                   'proof_of_residence_url',
                   'status',
-                  'is_account_verified']
+                  'is_account_verified',
+                  'initial_pin_change_date',
+                  'pin_change_count',
+                  'is_account_blocked', ]
 
     def to_representation(self, instance):
         wallet_fields = ['id', 'name', 'type', 'wallet_id', 'currency', 'address', 'description', 'logo_url']

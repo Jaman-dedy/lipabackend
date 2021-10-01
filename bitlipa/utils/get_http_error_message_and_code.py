@@ -22,8 +22,11 @@ def get_http_error_message_and_code(exc):
     if isinstance(exc, (core_exceptions.BadRequest, core_exceptions.ValidationError, drf_exceptions.ValidationError)):
         return {"code": status.HTTP_400_BAD_REQUEST, "message": error_message, "error": error}
 
+    if isinstance(exc, drf_exceptions.NotAuthenticated):
+        return {"code": status.HTTP_401_UNAUTHORIZED , "message": error_message, "error": error}
+
     if isinstance(exc, (core_exceptions.PermissionDenied, drf_exceptions.PermissionDenied)):
-        return {"code": status.HTTP_401_UNAUTHORIZED, "message": error_message, "error": error}
+        return {"code": status.HTTP_403_FORBIDDEN, "message": error_message, "error": error}
 
     if isinstance(exc, (core_exceptions.ObjectDoesNotExist, EmptyPage, drf_exceptions.NotFound, Http404)):
         return {
