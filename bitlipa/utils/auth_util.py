@@ -21,6 +21,9 @@ class AuthUtil:
         with contextlib.suppress(User.DoesNotExist):
             request.user = User.objects.get(email=decoded_token.get('email'))
 
+        if get_object_attr(request.user, 'is_account_blocked'):
+            raise drf_exceptions.PermissionDenied(error_messages.ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES)
+
         if is_admin is True and get_object_attr(request.user, 'is_admin') is not True:
             raise drf_exceptions.PermissionDenied(error_messages.ACCESS_DENIED)
 

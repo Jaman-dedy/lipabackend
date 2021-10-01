@@ -87,6 +87,9 @@ class AuthViewSet(viewsets.ViewSet):
     @action(methods=['post'], detail=False, url_path='login', url_name='login')
     def login_user(self, request):
         user = User.objects.login(**request.data)
+        if get_object_attr(user, 'is_account_blocked'):
+            return http_response(status=status.HTTP_403_FORBIDDEN,
+                                 message=error_messages.ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES)
         if get_object_attr(user, 'otp'):
             content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
             send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], False, html_message=content)
@@ -108,6 +111,11 @@ class AuthViewSet(viewsets.ViewSet):
     @action(methods=['post'], detail=False, url_path='admin/login', url_name='admin/login')
     def login_admin(self, request):
         user = User.objects.login_admin(**request.data)
+
+        if user.is_account_blocked:
+            return http_response(status=status.HTTP_403_FORBIDDEN,
+                                 message=error_messages.ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES)
+
         serializer = UserSerializer(user)
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, exp_hours=24)
         return http_response(status=status.HTTP_200_OK, data={"user": serializer.data, "token": user_token})
@@ -124,6 +132,11 @@ class AuthViewSet(viewsets.ViewSet):
 
         email = Validator.validate_email(request.data.get('email'))
         user = User.objects.get(email__iexact=email)
+
+        if user.is_account_blocked:
+            return http_response(status=status.HTTP_403_FORBIDDEN,
+                                 message=error_messages.ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES)
+
         email_token = JWTUtil.encode({
             'email': user.email, 'from_email': True, 'field_to_reset': field_to_reset
         }, exp_hours=24)
@@ -152,7 +165,12 @@ class AuthViewSet(viewsets.ViewSet):
             raise drf_exceptions.PermissionDenied(error_messages.WRONG_TOKEN)
 
         data = {**request.data, 'field_to_reset': field_to_reset, 'email': decoded_token.get('email')}
-        UserSerializer(User.objects.reset_pin_or_password(**data))
+        user = User.objects.reset_pin_or_password(**data)
+
+        if user.is_account_blocked:
+            return http_response(status=status.HTTP_403_FORBIDDEN,
+                                 message=error_messages.ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES)
+
         return http_response(status=status.HTTP_200_OK,
                              message=success_messages.RESET_SUCCESS.format(f'{field_to_reset} '))
 

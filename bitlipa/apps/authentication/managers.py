@@ -1,10 +1,12 @@
 from contextlib import suppress
+from datetime import datetime, timezone
 from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.validators import RegexValidator
 import moneyed
 
+from bitlipa.resources.constants import MAX_PIN_CHANGE_COUNT, MAX_PIN_CHANGE_DAYS_INTERVAL
 from bitlipa.resources import error_messages
 from bitlipa.utils.validator import Validator
 from bitlipa.apps.otp.models import OTP
@@ -180,6 +182,24 @@ class AuthManager:
             raise ValidationError(str(errors))
 
         user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+
+        if user.is_account_blocked:
+            return user
+
+        if field_to_reset == 'PIN' and user.pin_change_count == MAX_PIN_CHANGE_COUNT and user.initial_pin_change_date:
+            date_diff = datetime.now(timezone.utc) - user.initial_pin_change_date
+            if date_diff.days <= MAX_PIN_CHANGE_DAYS_INTERVAL:
+                user.is_account_blocked = True
+                user.save(using=self._db)
+                return user
+            else:
+                user.pin_change_count = 0
+                user.initial_pin_change_date = datetime.now()
+
+        if field_to_reset == 'PIN' and user.pin_change_count < MAX_PIN_CHANGE_COUNT:
+            user.pin_change_count += 1
+            user.initial_pin_change_date = user.initial_pin_change_date or datetime.now()
+
         setattr(user, field_to_reset.lower(), make_password(kwargs.get(field_to_reset)))
         user.save(using=self._db)
         return user
