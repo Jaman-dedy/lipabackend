@@ -18,7 +18,7 @@ class UserViewSet(viewsets.ViewSet):
 
     @action(methods=['put', 'get'], detail=False, url_path='*', url_name='list_update')
     def list_update(self, request):
-        AuthUtil.is_auth(request)
+        AuthUtil.is_auth(request, is_admin=True)
 
         # list users
         if request.method == 'GET':
@@ -42,7 +42,24 @@ class UserViewSet(viewsets.ViewSet):
                 else BasicUserSerializer(user, context={'include_wallets': True}).data
             return http_response(status=status.HTTP_200_OK, data=user_data)
 
+    @action(methods=['get'], detail=False, url_path='admins', url_name='list_admin')
+    def list_admins(self, request):
+        AuthUtil.is_auth(request, is_admin=True)
+        kwargs = {
+            'page': request.GET.get('page'),
+            'per_page': request.GET.get('per_page'),
+            'first_name__iexact': request.GET.get('first_name'),
+            'middle_name__iexact': request.GET.get('middle_name'),
+            'last_name__iexact': request.GET.get('last_name'),
+            'email__iexact': urllib.parse.unquote(request.GET.get('email')) if request.GET.get('email') else None,
+            'phonenumber__iexact': urllib.parse.unquote(request.GET.get('phonenumber')) if request.GET.get('phonenumber') else None,
+        }
+        result = User.objects.list_admins(**kwargs)
+        serializer = UserSerializer(result.get('data'), many=True)
+        return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
+
     # get one user
+
     def retrieve(self, request, pk=None, **kwargs):
         AuthUtil.is_auth(request)
         user = None

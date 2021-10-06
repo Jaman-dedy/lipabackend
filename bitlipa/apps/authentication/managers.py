@@ -80,6 +80,34 @@ class AuthManager:
         user.save(using=self._db)
         return user
 
+    def create_admin(self, **kwargs):
+        user = self.model()
+
+        if not kwargs.get('email'):
+            raise ValidationError(error_messages.REQUIRED.format('Email is '))
+
+        if not kwargs.get('phonenumber'):
+            raise ValidationError(error_messages.REQUIRED.format('Phone number is '))
+
+        user.email = self.normalize_email(kwargs.get('email'))
+        phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message=error_messages.WRONG_PHONE_NUMBER)
+        phone_regex(kwargs.get('phonenumber'))
+        user.phonenumber = kwargs.get('phonenumber')
+
+        user.first_name = kwargs.get('first_name')
+        user.middle_name = kwargs.get('middle_name')
+        user.last_name = kwargs.get('last_name')
+
+        if kwargs.get('password'):
+            user.password = make_password(kwargs.get('password'))
+
+        user.is_phone_verified = True
+        user.is_password_temporary = True
+        user.status = 'Active'
+        user.is_admin = True
+        user.save(using=self._db)
+        return user
+
     def check_login_from_different_device(user, **kwargs):
         if user.device_id and not kwargs.get('OTP') and kwargs.get('device_id') != user.device_id:
             return OTP.objects.save(email=user.email,
@@ -199,6 +227,9 @@ class AuthManager:
         if field_to_reset == 'PIN' and user.pin_change_count < MAX_PIN_CHANGE_COUNT:
             user.pin_change_count += 1
             user.initial_pin_change_date = user.initial_pin_change_date or datetime.now()
+
+        if kwargs.get('is_password_temporary') is False:
+            user.is_password_temporary = False
 
         setattr(user, field_to_reset.lower(), make_password(kwargs.get(field_to_reset)))
         user.save(using=self._db)

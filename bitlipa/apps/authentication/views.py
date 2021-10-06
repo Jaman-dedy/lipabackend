@@ -84,6 +84,12 @@ class AuthViewSet(viewsets.ViewSet):
 
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
+    @action(methods=['post'], detail=False, url_path='create-admin', url_name='create-admin')
+    def create_admin(self, request):
+        serializer = UserSerializer(User.objects.create_admin(**request.data))
+
+        return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
+
     @action(methods=['post'], detail=False, url_path='login', url_name='login')
     def login_user(self, request):
         user = User.objects.login(**request.data)
