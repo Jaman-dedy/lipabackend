@@ -21,7 +21,7 @@ class CryptoWalletManager(models.Manager):
     def list(self, user=None, **kwargs):
         page = to_int(kwargs.get('page'), 1)
         per_page = to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT)
-        table_fields = {**kwargs, 'deleted_at': None, 'user_id': get_object_attr(user, "id")}
+        table_fields = {**kwargs, 'user_id': get_object_attr(user, "id")}
 
         for key in ['all', 'page', 'per_page']:
             table_fields.pop(key, None)  # remove fields not in the DB table
@@ -32,7 +32,9 @@ class CryptoWalletManager(models.Manager):
         if (get_object_attr(user, "is_admin") and kwargs.get('all')) or kwargs.get('is_master'):
             table_fields.pop('user_id', None)
 
-        object_list = self.model.objects.filter(**remove_dict_none_values(table_fields)).order_by('-created_at')
+        object_list = self.model.objects.filter(**{
+            'deleted_at': None, **remove_dict_none_values(table_fields)}).order_by('-created_at')
+
         return {
             'data': Paginator(object_list, per_page).page(page).object_list,
             'meta': {
