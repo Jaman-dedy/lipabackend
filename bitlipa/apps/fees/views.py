@@ -24,7 +24,7 @@ class WalletViewSet(viewsets.ViewSet):
             return self.create_fee(request)
 
     def create_fee(self, request):
-        AuthUtil.is_auth(request)
+        AuthUtil.is_auth(request, is_admin=True)
         serializer = FeeSerializer(Fee.objects.create_fee(**request.data))
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
@@ -42,7 +42,7 @@ class WalletViewSet(viewsets.ViewSet):
 
     # get one fee
     def retrieve(self, request, pk=None):
-        AuthUtil.is_auth(request)
+        AuthUtil.is_auth(request, is_admin=True)
 
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('fee '))
@@ -52,7 +52,7 @@ class WalletViewSet(viewsets.ViewSet):
         return http_response(status=status.HTTP_200_OK, data=serializer.data)
 
     def update(self, request, pk=None):
-        AuthUtil.is_auth(request)
+        AuthUtil.is_auth(request, is_admin=True)
 
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('fee '))
@@ -63,7 +63,7 @@ class WalletViewSet(viewsets.ViewSet):
         return http_response(status=status.HTTP_200_OK, data=serializer.data)
 
     def delete(self, request, pk=None):
-        AuthUtil.is_auth(request)
+        AuthUtil.is_auth(request, is_admin=True)
 
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('fee '))
