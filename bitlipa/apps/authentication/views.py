@@ -141,7 +141,7 @@ class AuthViewSet(viewsets.ViewSet):
             'email': user.email, 'from_email': True, 'field_to_reset': field_to_reset
         }, exp_hours=24)
         link = f'{request.data.get("redirect_link") or settings.API_URL}/auth/reset-{field_to_reset.lower()}/{email_token}/'
-        content = loader.render_to_string(f'reset_{field_to_reset}.html', {'link': link, 'field_to_reset': field_to_reset})
+        content = loader.render_to_string(f'reset_{field_to_reset.lower()}.html', {'link': link, 'field_to_reset': field_to_reset})
 
         send_mail(f'Reset {field_to_reset}', '', settings.EMAIL_SENDER, [user.email], False, html_message=content)
 
