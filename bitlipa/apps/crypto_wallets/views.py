@@ -37,7 +37,7 @@ class WalletViewSet(viewsets.ViewSet):
 
     @action(methods=['get'], detail=False, url_path=r'addresses/(?P<wallet_id>.*)', url_name='list_crypto_addresses')
     def list_wallet_addresses(self, request, *args, **kwargs):
-        AuthUtil.is_auth(request)
+        AuthUtil.is_auth(request, is_admin=True)
         response = CryptoWallet.objects.list_wallet_addresses(user=request.user, wallet_id=kwargs.get('wallet_id'))
         return http_response(status=response.get('status_code') or status.HTTP_200_OK, data=response.get('data'))
 

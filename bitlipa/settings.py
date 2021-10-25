@@ -79,7 +79,9 @@ INSTALLED_APPS = [
     'bitlipa.apps.transactions',
     'bitlipa.apps.currency_exchange',
     'bitlipa.apps.fees',
-    'bitlipa.apps.ispiral_kyc'
+    'bitlipa.apps.ispiral_kyc',
+    'bitlipa.apps.roles',
+    'bitlipa.apps.user_role'
 ]
 
 MIDDLEWARE = [

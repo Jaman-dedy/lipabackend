@@ -22,6 +22,7 @@ class User(models.Model):
     is_email_verified = models.BooleanField(verbose_name="is email verified", blank=False, null=False, default=False)
     is_phone_verified = models.BooleanField(verbose_name="is phone verified", blank=False, null=False, default=False)
     is_account_verified = models.BooleanField(verbose_name="is account verified", blank=False, null=False, default=False)
+    is_password_temporary = models.BooleanField(verbose_name="is password temporary", blank=False, null=False, default=False)
     device_id = models.CharField(verbose_name=_("Device id"), max_length=30, blank=True, null=True)
     firebase_token = models.CharField(verbose_name=_("Firebase token"), max_length=255, blank=True, null=True)
     picture_url = models.CharField(verbose_name=_("Profile picture"), max_length=255, blank=True, null=True)
