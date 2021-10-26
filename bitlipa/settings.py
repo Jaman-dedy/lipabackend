@@ -82,8 +82,9 @@ INSTALLED_APPS = [
     'bitlipa.apps.ispiral_kyc',
     'bitlipa.apps.roles',
     'bitlipa.apps.user_role',
-    'bitlipa.apps.notifications'
-    'bitlipa.apps.emails'
+    'bitlipa.apps.notifications',
+    'bitlipa.apps.emails',
+    'bitlipa.apps.transaction_limits',
 ]
 
 MIDDLEWARE = [

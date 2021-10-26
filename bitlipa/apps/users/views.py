@@ -30,6 +30,7 @@ class UserViewSet(viewsets.ViewSet):
                 'last_name__iexact': request.GET.get('last_name'),
                 'email__iexact': urllib.parse.unquote(request.GET.get('email')) if request.GET.get('email') else None,
                 'phonenumber__iexact': urllib.parse.unquote(request.GET.get('phonenumber')) if request.GET.get('phonenumber') else None,
+                'q': urllib.parse.unquote(request.GET.get('q')) if request.GET.get('q') else None
             }
             result = User.objects.list(user=request.user, **kwargs)
             serializer = UserSerializer(result.get('data'), many=True)

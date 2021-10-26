@@ -17,10 +17,18 @@ class UserManager(BaseUserManager, AuthManager):
         page = to_int(kwargs.get('page'), 1)
         per_page = to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT)
 
-        for key in ['page', 'per_page']:
+        for key in ['page', 'per_page', 'q']:
             table_fields.pop(key, None)  # remove fields not in the DB table
 
-        query = models.Q(**{'deleted_at': None, **remove_dict_none_values(table_fields)})
+        query = None
+
+        if kwargs.get('q'):
+            for field in table_fields:
+                query = query | models.Q(**{f'{field.replace("iexact", "icontains")}': kwargs.get('q')}) if query else\
+                    models.Q(**{f'{field.replace("iexact", "icontains")}': kwargs.get('q')})
+            query = models.Q(**{'deleted_at': None}) & query if query else models.Q(**{'deleted_at': None})
+        else:
+            query = models.Q(**{'deleted_at': None, **remove_dict_none_values(table_fields)})
 
         object_list = self.model.objects.filter(query).order_by('-created_at')
         data = Paginator(object_list, per_page).page(page).object_list

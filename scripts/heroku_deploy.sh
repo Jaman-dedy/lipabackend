@@ -8,6 +8,9 @@ while [ $# -gt 0 ]; do
   --branch=*)
     branch="${1#*=}"
     ;;
+  --force=*)
+    force="${1#*=}"
+    ;;
   *)
     printf "***************************\n"
     printf "* Heroku Deploy Error: Invalid argument (${1}).\n"
@@ -51,4 +54,10 @@ if [ -f ".env.${env}" ]; then
     FIXER_RAPID_API_HOST=$(get_env_value FIXER_RAPID_API_HOST)
 fi
 
-git push heroku-${env} ${branch}
+if [[ $force=="yes" ]] || [[ $force=="y" ]]; then
+  force="-f"
+else
+  force=""
+fi
+
+git push heroku-${env} ${branch} ${force}
