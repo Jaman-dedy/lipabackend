@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'bitlipa.apps.roles',
     'bitlipa.apps.user_role',
     'bitlipa.apps.notifications'
+    'bitlipa.apps.emails'
 ]
 
 MIDDLEWARE = [

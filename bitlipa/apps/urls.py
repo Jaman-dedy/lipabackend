@@ -18,5 +18,6 @@ urlpatterns = [
     path('', include('bitlipa.apps.ispiral_kyc.urls')),
     path('', include('bitlipa.apps.roles.urls')),
     path('', include('bitlipa.apps.user_role.urls')),
-    path('', include('bitlipa.apps.notifications.urls'))
+    path('', include('bitlipa.apps.notifications.urls')),
+    path('', include('bitlipa.apps.emails.urls')),
 ]
