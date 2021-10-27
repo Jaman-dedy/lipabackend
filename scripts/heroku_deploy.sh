@@ -51,7 +51,8 @@ if [ -f ".env.${env}" ]; then
     BEYONIC_API_TOKEN=$(get_env_value BEYONIC_API_TOKEN) \
     FIXER_RAPID_API_URL=$(get_env_value FIXER_RAPID_API_URL) \
     FIXER_RAPID_API_KEY=$(get_env_value FIXER_RAPID_API_KEY) \
-    FIXER_RAPID_API_HOST=$(get_env_value FIXER_RAPID_API_HOST)
+    FIXER_RAPID_API_HOST=$(get_env_value FIXER_RAPID_API_HOST) \
+    FIREBASE_SERVICE_ACCOUNT=$(get_env_value FIREBASE_SERVICE_ACCOUNT)
 fi
 
 if [[ $force=="yes" ]] || [[ $force=="y" ]]; then
