@@ -1,8 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from bitlipa.apps import notifications
-
 
 router = routers.DefaultRouter()
 
@@ -21,5 +19,6 @@ urlpatterns = [
     path('', include('bitlipa.apps.notifications.urls')),
     path('', include('bitlipa.apps.emails.urls')),
     path('', include('bitlipa.apps.transaction_limits.urls')),
-    path('', include('bitlipa.apps.user_activity.urls'))
+    path('', include('bitlipa.apps.user_activity.urls')),
+    path('', include('bitlipa.apps.enigma.urls')),
 ]

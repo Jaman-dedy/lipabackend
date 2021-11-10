@@ -9,7 +9,7 @@ from .models import Fee
 from .serializers import FeeSerializer
 
 
-class WalletViewSet(viewsets.ViewSet):
+class FeeViewSet(viewsets.ViewSet):
     """
     API endpoint that allows fees to be viewed/edited/deleted.
     """

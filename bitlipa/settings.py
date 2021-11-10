@@ -54,8 +54,12 @@ KYC_ISPIRAL_API = env('KYC_ISPIRAL_API', default='')
 KYC_ISPIRAL_CLIENT_ID = env('KYC_ISPIRAL_CLIENT_ID', default='')
 KYC_ISPIRAL_CLIENT_SECRET = env('KYC_ISPIRAL_CLIENT_SECRET', default='')
 KYC_ISPIRAL_GRANT_TYPE = env('KYC_ISPIRAL_GRANT_TYPE', default='')
-
+# FIREBASE
 FIREBASE_SERVICE_ACCOUNT = env('FIREBASE_SERVICE_ACCOUNT', default='')
+# ENIGMA
+ENIGMA_API_URL = env('ENIGMA_API_URL', default='')
+ENIGMA_USERNAME = env('ENIGMA_USERNAME', default='')
+ENIGMA_PASSWORD = env('ENIGMA_PASSWORD', default='')
 
 # Application definition
 INSTALLED_APPS = [
@@ -86,7 +90,7 @@ INSTALLED_APPS = [
     'bitlipa.apps.emails',
     'bitlipa.apps.transaction_limits',
     'bitlipa.apps.user_activity',
-
+    'bitlipa.apps.enigma',
 ]
 
 MIDDLEWARE = [

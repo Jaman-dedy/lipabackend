@@ -5,5 +5,5 @@ from . import views
 
 router = routers.DefaultRouter()
 
-router.register(r'fees', views.FeeViewSet, basename='fees')
+router.register(r'enigma', views.EnigmaViewSet, basename='enigma')
 urlpatterns = router.urls
