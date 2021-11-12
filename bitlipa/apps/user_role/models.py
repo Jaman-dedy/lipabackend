@@ -25,4 +25,9 @@ class UserRole(models.Model):
         ]
 
     def get_role(self):
-        return RoleSerializer(self.role).data
+        serializer = RoleSerializer(self.role).data
+        data = serializer.get('id')
+
+        return data
+
+        # return RoleSerializer(self.role).data

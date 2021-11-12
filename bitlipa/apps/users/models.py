@@ -46,6 +46,7 @@ class User(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
     deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)
+    creator_id = models.UUIDField(default=uuid4, editable=False, null=True, blank=True)
 
     objects = UserManager()
 
