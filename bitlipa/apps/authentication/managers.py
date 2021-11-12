@@ -102,11 +102,6 @@ class AuthManager:
 
         if kwargs.get('password'):
             user.password = make_password(kwargs.get('password'))
-        # activity = {
-        #     'title': 'create a new admin',
-        #     'description': 'I created a new admin with the role of managing users'
-        # }
-        # UserActivity.objects.create_user_activity(user, **activity)
 
         user.is_phone_verified = True
         user.is_password_temporary = True
