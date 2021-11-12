@@ -86,7 +86,8 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='create-admin', url_name='create-admin')
     def create_admin(self, request):
-        serializer = UserSerializer(User.objects.create_admin(**request.data))
+        AuthUtil.is_auth(request, is_admin=True)
+        serializer = UserSerializer(User.objects.create_admin(creator=request.user, **request.data))
 
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 

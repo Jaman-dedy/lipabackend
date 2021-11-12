@@ -84,7 +84,7 @@ class UserViewSet(viewsets.ViewSet):
 
     # update user
     def update(self, request, pk=None):
-        AuthUtil.is_auth(request)
+        AuthUtil.is_auth(request, is_admin=True)
         if pk and not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
 

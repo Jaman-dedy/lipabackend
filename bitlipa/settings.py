@@ -85,6 +85,8 @@ INSTALLED_APPS = [
     'bitlipa.apps.notifications',
     'bitlipa.apps.emails',
     'bitlipa.apps.transaction_limits',
+    'bitlipa.apps.user_activity',
+
 ]
 
 MIDDLEWARE = [

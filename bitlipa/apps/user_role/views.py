@@ -51,11 +51,15 @@ class UserRoleViewSet(viewsets.ViewSet):
 
     @action(methods=['delete'], detail=False, url_path='revoke', url_name='revoke')
     def delete(self, request):
-        user_role_pk = request.data.get('user_role_id')
-        if user_role_pk and not is_valid_uuid(user_role_pk):
+        role_pk = request.data.get('role_id')
+        user_pk = request.data.get('user_id')
+        if role_pk and not is_valid_uuid(role_pk):
+            return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('role '))
+        if user_pk and not is_valid_uuid(user_pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('user '))
+
         AuthUtil.is_auth(request)
 
-        UserRole.objects.get(id=user_role_pk).delete()
+        UserRole.objects.get(role_id=role_pk, user_id=user_pk).delete()
 
         return http_response(status=status.HTTP_200_OK, message="User role revoked with success")

@@ -10,6 +10,7 @@ from bitlipa.resources.constants import MAX_PIN_CHANGE_COUNT, MAX_PIN_CHANGE_DAY
 from bitlipa.resources import error_messages
 from bitlipa.utils.validator import Validator
 from bitlipa.apps.otp.models import OTP
+# from bitlipa.apps.user_activity.models import UserActivity
 from bitlipa.utils.send_sms import send_sms
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 
@@ -80,7 +81,7 @@ class AuthManager:
         user.save(using=self._db)
         return user
 
-    def create_admin(self, **kwargs):
+    def create_admin(self, creator, **kwargs):
         user = self.model()
 
         if not kwargs.get('email'):
@@ -97,9 +98,15 @@ class AuthManager:
         user.first_name = kwargs.get('first_name')
         user.middle_name = kwargs.get('middle_name')
         user.last_name = kwargs.get('last_name')
+        user.creator_id = creator.id
 
         if kwargs.get('password'):
             user.password = make_password(kwargs.get('password'))
+        # activity = {
+        #     'title': 'create a new admin',
+        #     'description': 'I created a new admin with the role of managing users'
+        # }
+        # UserActivity.objects.create_user_activity(user, **activity)
 
         user.is_phone_verified = True
         user.is_password_temporary = True
