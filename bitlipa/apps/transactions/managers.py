@@ -52,13 +52,11 @@ class TransactionManager(models.Manager):
         }
 
     def send_funds(self, **kwargs):
-        transaction = self.model()
+        (transaction, errors) = (self.model(), {})
 
-        errors = {
-            'source_wallet': error_messages.REQUIRED.format('source wallet is ') if not kwargs.get('source_wallet') else None,
-            'target_wallet': error_messages.REQUIRED.format('target wallet is ') if not kwargs.get('target_wallet') else None,
-            'amount': error_messages.REQUIRED.format('amount is ') if not kwargs.get('amount') else None
-        }
+        errors['source_wallet'] = error_messages.REQUIRED.format('source wallet is ') if not kwargs.get('source_wallet') else None
+        errors['target_wallet'] = error_messages.REQUIRED.format('target wallet is ') if not kwargs.get('target_wallet') else None
+        errors['amount'] = error_messages.REQUIRED.format('amount is ') if not kwargs.get('amount') else None
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
@@ -76,32 +74,42 @@ class TransactionManager(models.Manager):
             target_wallet = FiatWallet.objects.get(
                 models.Q(**{'id' if is_valid_uuid(kwargs.get('target_wallet')) else 'number': kwargs.get('target_wallet')}))
 
-        tx_fee = Fee.objects.get_fee(name__iexact="internal funds transfer")
-        fx_fee = 0
-        tx_amount = to_decimal(kwargs.get('amount'))
-        tx_total_amount = tx_amount + tx_fee.amount
+        (fx_fee, fx_rate) = (0, 0)
+        internal_funds_transfer_fee = Fee.objects.get_fee(name__iexact="internal funds transfer")
 
-        errors['amount'] = error_messages.INVALID_AMOUNT if tx_amount <= 0 else None
-        errors['source_wallet'] = error_messages.INSUFFICIENT_FUNDS if source_wallet.balance.amount - tx_total_amount <= 0 else None
+        if str(internal_funds_transfer_fee.type).upper() == str(Fee.Types.FLAT):
+            tx_fee = internal_funds_transfer_fee.amount
+
+        if str(internal_funds_transfer_fee.type).upper() == str(Fee.Types.PERCENTAGE):
+            tx_fee = to_decimal((internal_funds_transfer_fee.amount * to_decimal(kwargs.get('amount'))) / 100)
+
+        tx_source_amount = to_decimal(kwargs.get('amount')) - tx_fee
+        tx_source_total_amount = to_decimal(kwargs.get('amount'))
+        tx_target_amount = tx_source_amount
+
+        errors['amount'] = error_messages.INVALID_AMOUNT if tx_source_amount <= 0 else None
+        errors['source_wallet'] = error_messages.INSUFFICIENT_FUNDS if source_wallet.balance.amount - tx_source_total_amount <= 0 else None
         errors['target_wallet'] = error_messages.SAME_SOURCE_TARGET_WALLET if source_wallet.id == target_wallet.id else None
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
-        # debit sender wallet
-        source_wallet.balance.amount -= tx_total_amount
+        # debit sender's wallet
+        source_wallet.balance.amount -= tx_source_total_amount
 
-        # credit receiver wallet
+        # credit receiver's wallet
         if source_wallet.currency == target_wallet.currency:
-            target_wallet.balance.amount += tx_amount
+            target_wallet.balance.amount += to_decimal(tx_source_amount)
         else:
             currency_exchange = CurrencyExchange.objects.convert(**{
-                'amount': tx_amount,
+                'amount': tx_source_total_amount,
                 'base_currency': source_wallet.currency,
-                'currency': target_wallet.currency
+                'currency': target_wallet.currency,
             })
-            fx_fee = currency_exchange.get('fee')
-            tx_amount = to_decimal(currency_exchange.get('amount'))
+            fx_fee = to_decimal(currency_exchange.get('fee'))
+            fx_rate = to_decimal(currency_exchange.get('rate'))
+            tx_source_amount = tx_source_total_amount - (fx_fee + tx_fee)
+            tx_target_amount = to_decimal(currency_exchange.get('amount'))
             target_wallet.balance.amount += to_decimal(currency_exchange.get('amount'))
 
         transaction.type = constants.INTERNAL_USERS_TRANSACTION
@@ -109,14 +117,16 @@ class TransactionManager(models.Manager):
         # transaction.order_id = kwargs.get('order_id')
         # transaction.serial = kwargs.get('serial')
         transaction.transaction_id = uuid.uuid4().hex
-        transaction.from_currency = source_wallet.currency
-        transaction.to_currency = target_wallet.currency
-        transaction.fee = tx_fee.amount or 0
-        transaction.fx_fee = fx_fee or 0
-        transaction.amount = tx_amount or 0
-        transaction.total_amount = tx_total_amount
-        transaction.from_address = get_object_attr(source_wallet, 'address', get_object_attr(source_wallet, 'number'))
-        transaction.to_address = get_object_attr(target_wallet, 'address', get_object_attr(target_wallet, 'number'))
+        transaction.source_currency = source_wallet.currency
+        transaction.target_currency = target_wallet.currency
+        transaction.fee = tx_fee
+        transaction.fx_fee = fx_fee
+        transaction.fx_rate = fx_rate
+        transaction.source_amount = tx_source_amount
+        transaction.source_total_amount = tx_source_total_amount
+        transaction.target_amount = tx_target_amount
+        transaction.source_address = get_object_attr(source_wallet, 'address', get_object_attr(source_wallet, 'number'))
+        transaction.target_address = get_object_attr(target_wallet, 'address', get_object_attr(target_wallet, 'number'))
         transaction.description = kwargs.get('description')
         transaction.state = self.model.ProcessingState.DONE.label
         transaction.sender = source_wallet.user
@@ -261,8 +271,8 @@ class TransactionManager(models.Manager):
         transaction.fee = tx_fee or 0
         transaction.amount = tx_amount or 0
         transaction.total_amount = tx_total_amount
-        transaction.from_address = data.get('phone_number')
-        transaction.to_address = get_object_attr(user_wallet, 'address') or\
+        transaction.source_address = data.get('phone_number')
+        transaction.target_address = get_object_attr(user_wallet, 'address') or\
             get_object_attr(user_wallet, 'number')
         transaction.receiver = user_wallet.user
 
@@ -333,20 +343,20 @@ class TransactionManager(models.Manager):
         except tx_model.DoesNotExist:
             transaction = tx_model()
 
-        tx_fee = to_decimal(kwargs.get('fee', transaction.fee.amount)) * (1 / 10**to_decimal(kwargs.get('decimal'), 8))
-        tx_amount = to_decimal(kwargs.get('amount', transaction.amount.amount)) * (1 / 10**to_decimal(kwargs.get('decimal'), 8))
+        tx_fee = to_decimal(kwargs.get('fee', transaction.fee.amount)) * (1 / 10**to_decimal(kwargs.get('decimal')))
+        tx_amount = to_decimal(kwargs.get('amount', transaction.amount.amount)) * (1 / 10**to_decimal(kwargs.get('decimal')))
         tx_total_amount = kwargs.get('total_amount', tx_amount + tx_fee)
 
         crypto_wallets = CryptoWallet.objects.filter(wallet_id=kwargs.get('wallet_id'),
-                                                     address__in=[kwargs.get('from_address'), kwargs.get('to_address')])
+                                                     address__in=[kwargs.get('source_address'), kwargs.get('target_address')])
         if len(crypto_wallets):
             for crypto_wallet in crypto_wallets:
-                transaction.sender = get_object_attr(crypto_wallet, "user") if crypto_wallet.address == kwargs.get('from_address') else None
-                transaction.receiver = get_object_attr(crypto_wallet, "user") if crypto_wallet.address == kwargs.get('to_address') else None
-                if tx_type == str(tx_model.Types.WITHDRAW.label) and crypto_wallet.address == kwargs.get('from_address'):
+                transaction.sender = get_object_attr(crypto_wallet, "user") if crypto_wallet.address == kwargs.get('source_address') else None
+                transaction.receiver = get_object_attr(crypto_wallet, "user") if crypto_wallet.address == kwargs.get('target_address') else None
+                if tx_type == str(tx_model.Types.WITHDRAW.label) and crypto_wallet.address == kwargs.get('source_address'):
                     crypto_wallet.balance.amount -= tx_total_amount  # debit sender wallet
 
-                if tx_type == str(tx_model.Types.DEPOSIT.label) and crypto_wallet.address == kwargs.get('to_address'):
+                if tx_type == str(tx_model.Types.DEPOSIT.label) and crypto_wallet.address == kwargs.get('target_address'):
                     crypto_wallet.balance.amount += tx_amount  # credit receiver wallet
 
             if not transaction.is_balance_updated and tx_processing_state == str(tx_model.ProcessingState.DONE.label)\
@@ -366,8 +376,8 @@ class TransactionManager(models.Manager):
         transaction.fee = tx_fee or 0
         transaction.amount = tx_amount or 0
         transaction.total_amount = tx_total_amount
-        transaction.from_address = kwargs.get('from_address', transaction.from_address)
-        transaction.to_address = kwargs.get('to_address', transaction.to_address)
+        transaction.source_address = kwargs.get('source_address', transaction.source_address)
+        transaction.target_address = kwargs.get('target_address', transaction.target_address)
         transaction.description = kwargs.get('description', transaction.description)
         transaction.state = tx_state
 

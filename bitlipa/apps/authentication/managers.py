@@ -161,6 +161,7 @@ class AuthManager:
         user.country = kwargs.get('country') or user.country
         user.country_code = kwargs.get('country_code') or user.country_code
         user.local_currency = kwargs.get('local_currency') or user.local_currency
+        user.firebase_token = kwargs.get('firebase_token') or user.firebase_token
 
         if not user.local_currency and user.country_code:
             with suppress(Exception):

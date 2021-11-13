@@ -40,38 +40,52 @@ class Transaction(models.Model):
     serial = models.CharField(verbose_name=_("serial number"), max_length=100, blank=True, null=True)
     vout_index = models.CharField(verbose_name=_("index of vout"), max_length=100, blank=True, null=True)
     transaction_id = models.CharField(verbose_name=_("transaction ID"), max_length=100, blank=True, null=True)
-    from_currency = models.CharField(verbose_name=_("source currency"), max_length=30, blank=True, null=True)
-    to_currency = models.CharField(verbose_name=_("target currency"), max_length=30, blank=True, null=True)
+    source_currency = models.CharField(verbose_name=_("source currency"), max_length=30, blank=True, null=True)
+    target_currency = models.CharField(verbose_name=_("target currency"), max_length=30, blank=True, null=True)
     fee = MoneyField(verbose_name=_("transaction fee"),
                      blank=False,
                      null=False,
                      default=0,
                      max_digits=36,
                      decimal_places=18,
-                     currency_field_name='from_currency')
+                     currency_field_name='source_currency')
     fx_fee = MoneyField(verbose_name=_("currency exchange fee"),
                         blank=False,
                         null=False,
                         default=0,
                         max_digits=36,
                         decimal_places=18,
-                        currency_field_name='to_currency')
-    amount = MoneyField(verbose_name=_("transaction amount"),
-                        blank=False,
-                        null=False,
-                        default=0,
-                        max_digits=36,
-                        decimal_places=18,
-                        currency_field_name='to_currency')
-    total_amount = MoneyField(verbose_name=_("transaction total amount"),
-                              blank=False,
-                              null=False,
-                              default=0,
-                              max_digits=36,
-                              decimal_places=18,
-                              currency_field_name='from_currency')
-    from_address = models.CharField(verbose_name=_("source crypto wallet address"), max_length=100, blank=True, null=True)
-    to_address = models.CharField(verbose_name=_("destination crypto wallet address"), max_length=100, blank=True, null=True)
+                        currency_field_name='target_currency')
+    fx_rate = MoneyField(verbose_name=_("currency exchange rate"),
+                         blank=False,
+                         null=False,
+                         default=0,
+                         max_digits=36,
+                         decimal_places=18,
+                         currency_field_name='target_currency')
+    source_amount = MoneyField(verbose_name=_("transaction source amount"),
+                               blank=False,
+                               null=False,
+                               default=0,
+                               max_digits=36,
+                               decimal_places=18,
+                               currency_field_name='source_currency')
+    source_total_amount = MoneyField(verbose_name=_("transaction source total amount"),
+                                     blank=False,
+                                     null=False,
+                                     default=0,
+                                     max_digits=36,
+                                     decimal_places=18,
+                                     currency_field_name='source_currency')
+    target_amount = MoneyField(verbose_name=_("transaction target amount"),
+                               blank=False,
+                               null=False,
+                               default=0,
+                               max_digits=36,
+                               decimal_places=18,
+                               currency_field_name='target_currency')
+    source_address = models.CharField(verbose_name=_("source crypto wallet address"), max_length=100, blank=True, null=True)
+    target_address = models.CharField(verbose_name=_("destination crypto wallet address"), max_length=100, blank=True, null=True)
     description = models.TextField(verbose_name=_("transaction description"), blank=True, null=True)
     state = models.CharField(verbose_name=_("transaction state"),
                              max_length=30,
