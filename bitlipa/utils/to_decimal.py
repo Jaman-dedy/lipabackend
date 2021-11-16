@@ -1,7 +1,7 @@
 import decimal
 
 
-def to_decimal(value, default_value=0, precision=None):
+def to_decimal(value, default_value=0, precision=18):
     try:
         if precision:
             decimal.getcontext().prec = precision

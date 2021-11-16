@@ -82,8 +82,8 @@ class TransactionViewSet(viewsets.ViewSet):
             'state__iexact': request.GET.get('state'),
             'transaction_id': request.GET.get('transaction_id'),
             'serial': request.GET.get('serial'),
-            'from_address': request.GET.get('from_address'),
-            'to_address': request.GET.get('to_address'),
+            'source_address': request.GET.get('source_address'),
+            'target_address': request.GET.get('target_address'),
         }
 
         result = Transaction.objects.list(user=request.user, **kwargs)
