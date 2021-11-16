@@ -17,10 +17,12 @@ from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 
 class AuthManager:
     def save_email(self, **kwargs):
-        user = self.model()
+        email = kwargs.get('email')
 
-        if not kwargs.get('email'):
+        if not email:
             raise ValidationError(error_messages.REQUIRED.format('Email is '))
+
+        user = self.model.objects.get(email=email)
 
         user.email = self.normalize_email(kwargs.get('email'))
         user.is_email_verified = True
