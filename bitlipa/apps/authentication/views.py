@@ -34,18 +34,23 @@ class AuthViewSet(viewsets.ViewSet):
             raise core_exceptions.ValidationError(error_messages.REQUIRED.format('Email is '))
 
         email = Validator.validate_email(request.data.get('email'))
-        with suppress(User.DoesNotExist):
-            user = User.objects.get(email__iexact=email)
-            if user.is_email_verified and user.is_phone_verified and user.phonenumber and user.pin:
-                raise IntegrityError(error_messages.CONFLICT.format(f'{email} '))
-            elif not user.phonenumber or not user.pin:
-                user.delete()
+        user = User.objects.get(email__iexact=email)
+        # with suppress(User.DoesNotExist):
+        #     user = User.objects.get(email__iexact=email)
+        #     if user.is_email_verified and user.is_phone_verified and user.phonenumber and user.pin:
+        #         raise IntegrityError(error_messages.CONFLICT.format(f'{email} '))
+        #     elif not user.phonenumber or not user.pin:
+        #         user.delete()
 
-        email_token = JWTUtil.encode({"email": email, "from_email": True}, exp_hours=24)
+        print('url', request.data.get("redirect_link"))
+
+        email_token = JWTUtil.encode({"email": user.email, "from_email": True}, exp_hours=24)
+        link = f'{request.data.get("redirect_link") or settings.API_URL}/auth/verify-email/{email_token}/'
         content = loader.render_to_string('verify_email.html', {
-            'link': f'{settings.API_URL}/auth/verify-email/{email_token}/'
+            'link': link
         })
-        send_mail('Verify account', '', settings.EMAIL_SENDER, [email], False, html_message=content)
+        print('user', user.email)
+        send_mail('Verify account', '', settings.EMAIL_SENDER, [user.email], False, html_message=content)
         return http_response(status=status.HTTP_201_CREATED, message=success_messages.EMAIL_SENT, data={
             "token": JWTUtil.encode({"email": email}, exp_hours=24)
         })
