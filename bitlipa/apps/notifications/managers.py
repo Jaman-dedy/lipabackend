@@ -49,7 +49,9 @@ class NotificationsManager(models.Manager):
         notification.delivery_option = kwargs.get('delivery_option')
         notification.image_url = kwargs.get('image_url')
 
-        notification.save(using=self._db)
+        if kwargs.get('save') is not False:
+            notification.save(using=self._db)
+
         return notification
 
     def update(self, id=None, **kwargs):
