@@ -16,22 +16,22 @@ def send_notification(tokens, event_type, data):
         **data,
         'event_type': event_type,
         'title': data.get('title') or data.get('event_type'),
-        'body': data.get('body'),
+        'body': data.get('body') or '',
         'icon': data.get('icon') or '@mipmap/ic_launcher',
         'color': data.get('color') or '#00343D',
         'priority': data.get('priority') or 'max',
         'visibility': data.get('visibility') or 'public',
-        'image': data.get('image'),
+        'image': data.get('image') or '',
         'payload': json.dumps(data.get('payload')) if isinstance(data.get('payload'), dict) else None
     }
     notification = {
         'title': data.get('title') or data.get('event_type'),
-        'body': data.get('body'),
+        'body': data.get('body') or '',
         'icon': data.get('icon') or '@mipmap/ic_launcher',
         'color': data.get('color') or '#00343D',
         'priority': data.get('priority') or 'max',
         'visibility': data.get('visibility') or 'public',
-        'image': data.get('image'),
+        'image': data.get('image') or '',
     }
 
     android_notification = messaging.AndroidConfig(
