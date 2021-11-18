@@ -145,18 +145,19 @@ class TransactionManager(models.Manager):
             'phonenumber': REQUIRED_ERROR.format('phonenumber is ') if not kwargs.get('phonenumber') else None,
             'amount': REQUIRED_ERROR.format('amount is ') if not kwargs.get('amount') else None,
             'currency': REQUIRED_ERROR.format('currency is ') if not kwargs.get('currency') else None,
-            'description': REQUIRED_ERROR.format('description is ') if not kwargs.get('description') else None,
             'callback_url': REQUIRED_ERROR.format('callback_url is ') if not kwargs.get('callback_url') else None,
             'metadata': REQUIRED_ERROR.format('metadata is ') if not kwargs.get('metadata') else None
         }
 
         metadata = kwargs.get('metadata') if isinstance(kwargs.get('metadata'), dict) else {}
-        errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if not metadata.get('tx_fee') else None
-        errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if not metadata.get('fx_fee') else None
-        errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if not metadata.get('fx_rate') else None
-        errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if not metadata.get('source_amount') else None
-        errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if not metadata.get('source_total_amount') else None
-        errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if not metadata.get('target_amount') else None
+        errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if metadata.get('tx_fee') is None else None
+        errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if metadata.get('fx_fee') is None else None
+        errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if metadata.get('fx_rate') is None else None
+        errors['source_currency'] = REQUIRED_ERROR.format('source currency is ') if not metadata.get('source_currency') else None
+        errors['target_currency'] = REQUIRED_ERROR.format('target currency is ') if not metadata.get('target_currency') else None
+        errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if metadata.get('source_amount') is None else None
+        errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if metadata.get('source_total_amount') is None else None
+        errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if metadata.get('target_amount') is None else None
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
@@ -246,6 +247,8 @@ class TransactionManager(models.Manager):
         errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if metadata.get('tx_fee') is None else None
         errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if metadata.get('fx_fee') is None else None
         errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if metadata.get('fx_rate') is None else None
+        errors['source_currency'] = REQUIRED_ERROR.format('source currency is ') if not metadata.get('source_currency') else None
+        errors['target_currency'] = REQUIRED_ERROR.format('target currency is ') if not metadata.get('target_currency') else None
         errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if metadata.get('source_amount') is None else None
         errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if metadata.get('source_total_amount') is None else None
         errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if metadata.get('target_amount') is None else None
@@ -277,7 +280,7 @@ class TransactionManager(models.Manager):
         transaction.serial = kwargs.get('event')
         transaction.type = constants.TOP_UP
         transaction.wallet_id = get_object_attr(user_wallet, 'wallet_id')
-        transaction.source_currency = data.get('currency')
+        transaction.source_currency = metadata.get('source_currency')
         transaction.target_currency = user_wallet.currency
         transaction.description = metadata.get('description') or 'top up from BEYONIC'
         transaction.state = data.get('status')
