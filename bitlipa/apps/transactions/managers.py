@@ -140,15 +140,23 @@ class TransactionManager(models.Manager):
         return transaction
 
     def topup_funds(self, user=None, **kwargs):
+        REQUIRED_ERROR = error_messages.REQUIRED
         errors = {
-            'phonenumber': error_messages.REQUIRED.format('phonenumber is ') if not kwargs.get('phonenumber') else None,
-            'amount': error_messages.REQUIRED.format('amount is ') if not kwargs.get('amount') else None,
-            'currency': error_messages.REQUIRED.format('currency is ') if not kwargs.get('currency') else None,
-            'description': error_messages.REQUIRED.format('description is ') if not kwargs.get('description') else None,
-            'callback_url': error_messages.REQUIRED.format('callback_url is ') if not kwargs.get('callback_url') else None,
-            'metadata': error_messages.REQUIRED.format('metadata is ') if not kwargs.get('metadata') else None
-
+            'phonenumber': REQUIRED_ERROR.format('phonenumber is ') if not kwargs.get('phonenumber') else None,
+            'amount': REQUIRED_ERROR.format('amount is ') if not kwargs.get('amount') else None,
+            'currency': REQUIRED_ERROR.format('currency is ') if not kwargs.get('currency') else None,
+            'description': REQUIRED_ERROR.format('description is ') if not kwargs.get('description') else None,
+            'callback_url': REQUIRED_ERROR.format('callback_url is ') if not kwargs.get('callback_url') else None,
+            'metadata': REQUIRED_ERROR.format('metadata is ') if not kwargs.get('metadata') else None
         }
+
+        metadata = kwargs.get('metadata') if isinstance(kwargs.get('metadata'), dict) else {}
+        errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if not metadata.get('tx_fee') else None
+        errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if not metadata.get('fx_fee') else None
+        errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if not metadata.get('fx_rate') else None
+        errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if not metadata.get('source_amount') else None
+        errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if not metadata.get('source_total_amount') else None
+        errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if not metadata.get('target_amount') else None
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
@@ -224,21 +232,23 @@ class TransactionManager(models.Manager):
         return response.json()
 
     def create_or_update_topup_transaction(self, **kwargs):
-        tx_model = self.model
-        errors = {
-            'data' : error_messages.REQUIRED.format('data is ') if not kwargs.get('data') else None,
-            'event' : error_messages.REQUIRED.format('event is ') if not kwargs.get('event') else None,
-        }
+        REQUIRED_ERROR = error_messages.REQUIRED
+        errors = {}
+        data = kwargs.get('data') if isinstance(kwargs.get('data'), dict) else {}
+        metadata = data.get('metadata') if isinstance(data.get('metadata'), dict) else {}
 
-        data = kwargs.get('data')
-
-        errors['metadata'] = error_messages.REQUIRED.format('metadata is ') if not data.get('metadata') else None
-        errors['id'] = error_messages.REQUIRED.format('id is ') if not data.get('id') else None
-
-        metadata = data.get('metadata')
-
-        if not metadata.get('crypto_wallet_id') and not metadata.get('fiat_wallet_id') :
-            errors['wallet_id'] = error_messages.REQUIRED.format('wallet_id is ')
+        errors['data'] = REQUIRED_ERROR.format('data is ') if not kwargs.get('data') or not isinstance(kwargs.get('data'), dict) else None
+        errors['event'] = REQUIRED_ERROR.format('event is ') if not kwargs.get('event') else None
+        errors['metadata'] = REQUIRED_ERROR.format('metadata is ') if not data.get('metadata') else None
+        errors['id'] = REQUIRED_ERROR.format('id is ') if not data.get('id') else None
+        errors['wallet_id'] = REQUIRED_ERROR.format('wallet id is ') \
+            if not (metadata.get('crypto_wallet_id') or metadata.get('fiat_wallet_id')) else None
+        errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if metadata.get('tx_fee') is None else None
+        errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if metadata.get('fx_fee') is None else None
+        errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if metadata.get('fx_rate') is None else None
+        errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if metadata.get('source_amount') is None else None
+        errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if metadata.get('source_total_amount') is None else None
+        errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if metadata.get('target_amount') is None else None
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
@@ -246,39 +256,43 @@ class TransactionManager(models.Manager):
         tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
         tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
         tx_id = data.get('id')
-        tx_fee = to_decimal(data.get('fee', 0))
-        tx_amount = to_decimal(data.get('amount'))
-        tx_total_amount = data.get('total_amount', tx_amount + tx_fee)
+        tx_fee = to_decimal(metadata.get('tx_fee'))
+        fx_fee = to_decimal(metadata.get('fx_fee'))
+        fx_rate = to_decimal(metadata.get('fx_rate'))
+        source_amount = to_decimal(metadata.get('source_amount'))
+        source_total_amount = to_decimal(metadata.get('source_total_amount'))
+        target_amount = to_decimal(metadata.get('target_amount'))
 
         try:
-            transaction = tx_model.objects.get(transaction_id=tx_id, serial=kwargs.get('event'))
+            transaction = self.model.objects.get(transaction_id=tx_id, serial=kwargs.get('event'))
             if transaction:
                 raise IntegrityError(f'this transaction {tx_id}')
-
-        except tx_model.DoesNotExist:
-            transaction = tx_model()
+        except self.model.DoesNotExist:
+            transaction = self.model()
 
         user_wallet = CryptoWallet.objects.get(id=tx_crypto_wallet_id) if tx_crypto_wallet_id \
             else FiatWallet.objects.get(id=tx_fiat_wallet_id)
 
         transaction.transaction_id = tx_id
         transaction.serial = kwargs.get('event')
-        transaction.type = constants.BEYONIC_TOP_UP
+        transaction.type = constants.TOP_UP
         transaction.wallet_id = get_object_attr(user_wallet, 'wallet_id')
-        transaction.currency = user_wallet.currency
-        transaction.description = kwargs.get('description')
+        transaction.source_currency = data.get('currency')
+        transaction.target_currency = user_wallet.currency
+        transaction.description = metadata.get('description') or 'top up from BEYONIC'
         transaction.state = data.get('status')
-        transaction.fee = tx_fee or 0
-        transaction.amount = tx_amount or 0
-        transaction.total_amount = tx_total_amount
+        transaction.fee = tx_fee
+        transaction.fx_fee = fx_fee
+        transaction.fx_rate = fx_rate
+        transaction.source_amount = source_amount
+        transaction.source_total_amount = source_total_amount
+        transaction.target_amount = target_amount
         transaction.source_address = data.get('phone_number')
-        transaction.target_address = get_object_attr(user_wallet, 'address') or\
-            get_object_attr(user_wallet, 'number')
+        transaction.target_address = get_object_attr(user_wallet, 'address') or get_object_attr(user_wallet, 'number')
         transaction.receiver = user_wallet.user
 
         if(data.get("status") == "success" or data.get("status") == "successful"):
-            # TODO : Convert fiat amount to crypto
-            user_wallet.balance.amount += tx_amount
+            user_wallet.balance.amount += target_amount
             user_wallet.save()
             transaction.save(using=self._db)
         return transaction

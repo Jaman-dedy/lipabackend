@@ -17,7 +17,12 @@ def send_notification(sender, instance, created, **kwargs):
     sender = get_object_attr(instance, 'sender')
     receiver = get_object_attr(instance, 'receiver')
 
-    if instance.type == constants.INTERNAL_USERS_TRANSACTION and receiver and get_object_attr(receiver, 'firebase_token'):
+    if instance.type == constants.INTERNAL_USERS_TRANSACTION:
+        event_type = events.MONEY_RECEIVED
+    if instance.type == constants.TOP_UP:
+        event_type = events.TOP_UP
+
+    if event_type and receiver and get_object_attr(receiver, 'firebase_token'):
         if sender and get_object_attr(sender, 'id') != receiver.id:
             data = {
                 'title': f'{instance.sender.first_name or instance.sender.middle_name or instance.sender.last_name or instance.sender.email} sent you money',
@@ -25,11 +30,11 @@ def send_notification(sender, instance, created, **kwargs):
                 'image': instance.sender.picture_url,
                 'payload': {},
             }
-            return send_push_notification([receiver.firebase_token], events.MONEY_RECEIVED, data)
+            return send_push_notification([receiver.firebase_token], event_type, data)
 
         data = {
             'title': 'You received money',
             'body': f'You received {format_number(instance.target_amount.amount)} {instance.target_currency}',
             'payload': {},
         }
-        return send_push_notification([receiver.firebase_token], events.MONEY_RECEIVED, data)
+        return send_push_notification([receiver.firebase_token], event_type, data)
