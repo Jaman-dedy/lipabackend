@@ -49,6 +49,7 @@ class TransactionViewSet(viewsets.ViewSet):
         return http_response(status=status.HTTP_201_CREATED, data=data)
 
     @action(methods=['post'], detail=False, url_path='beyonic-withdraw', url_name='beyonic_withdraw')
+    @db_transaction.atomic
     def beyonic_withdraw(self, request):
         AuthUtil.is_auth(request)
         data = Transaction.objects.beyonic_withdraw(user=request.user, **request.data)
@@ -70,6 +71,12 @@ class TransactionViewSet(viewsets.ViewSet):
         # TODO: Remove logs
         logger(request.data, 'info')
         TransactionSerializer(Transaction.objects.create_or_update_topup_transaction(**request.data))
+        return HttpResponse(status=status.HTTP_200_OK, content='OK')
+    @action(methods=['post'], detail=False, url_path='withdraw/callback', url_name='withdraw_transaction')
+    def create_or_update_withdraw_transaction(self, request):
+        # TODO: Remove logs
+        logger(request.data, 'info')
+        TransactionSerializer(Transaction.objects.create_or_update_withdraw_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
     def list_transactions(self, request):

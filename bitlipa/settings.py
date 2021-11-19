@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+from email.policy import default
 import os
 from pathlib import Path
 import environ
@@ -35,7 +36,9 @@ SECRET_KEY = env('SECRET_KEY', default='bitlipa-secret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
+# ALLOWED_HOSTS = env.string('DJANGO_ALLOWED_HOSTS', default='*').split(',')
 ALLOWED_HOSTS = "*"
+
 
 API_URL = env('API_URL', default='http://localhost:8000/api/v1')
 APP_NAME = env('APP_NAME', default='BitLipa')
@@ -172,6 +175,7 @@ DATABASES = {
         'PORT': env('DB_PORT', default='5432'),
     }
 }
+
 
 prod_db = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(prod_db)
