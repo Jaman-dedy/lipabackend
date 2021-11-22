@@ -1,15 +1,25 @@
 from rest_framework import serializers
-from bitlipa.apps.user_role.models import UserRole
-
 
 from bitlipa.utils.get_object_attr import get_object_attr
+from bitlipa.apps.user_role.models import UserRole
 from bitlipa.apps.users.models import User
 from bitlipa.apps.fiat_wallet.models import FiatWallet
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class FiatWalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FiatWallet
+        fields = '__all__'
 
+
+class CryptoWalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CryptoWallet
+        fields = '__all__'
+
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['id',
@@ -53,11 +63,21 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'roles': roles
         }
         if get_object_attr(self, 'context', {}).get('include_wallets') is True:
+            (fiat_wallets, crypto_wallets) = ([], [])
+
+            for fiat_wallet in FiatWallet.objects.filter(user=instance):
+                fiat_wallets.append({**FiatWalletSerializer(fiat_wallet).data,
+                                     'balance_in_local_currency': fiat_wallet.balance_in_local_currency})
+
+            for crypto_wallet in CryptoWallet.objects.filter(user=instance, is_master=False):
+                crypto_wallets.append({**CryptoWalletSerializer(crypto_wallet).data,
+                                       'balance_in_usd': crypto_wallet.balance_in_usd,
+                                       'balance_in_local_currency': crypto_wallet.balance_in_local_currency})
 
             user_data = {
                 **user_data,
-                'fiat_wallets': FiatWallet.objects.filter(user=instance).values(),
-                'crypto_wallets': CryptoWallet.objects.filter(user=instance, is_master=False).values(),
+                'fiat_wallets': fiat_wallets,
+                'crypto_wallets': crypto_wallets
             }
         return user_data
 
