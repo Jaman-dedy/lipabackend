@@ -78,7 +78,8 @@ class TransactionViewSet(viewsets.ViewSet):
             'page': request.GET.get('page'),
             'per_page': request.GET.get('per_page'),
             'type__iexact': request.GET.get('type'),
-            'currency__iexact': request.GET.get('currency'),
+            'source_currency__iexact': request.GET.get('source_currency'),
+            'target_currency__iexact': request.GET.get('target_currency'),
             'state__iexact': request.GET.get('state'),
             'transaction_id': request.GET.get('transaction_id'),
             'serial': request.GET.get('serial'),
@@ -88,6 +89,26 @@ class TransactionViewSet(viewsets.ViewSet):
 
         result = Transaction.objects.list(user=request.user, **kwargs)
         serializer = TransactionSerializer(result.get('data'), many=True)
+        return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
+
+    @action(methods=['get'], detail=False, url_path='last-receivers', url_name='last_receivers')
+    def list_last_receivers(self, request):
+        AuthUtil.is_auth(request)
+        kwargs = {
+            'page': request.GET.get('page'),
+            'per_page': request.GET.get('per_page'),
+            'type__iexact': request.GET.get('type'),
+            'source_currency__iexact': request.GET.get('source_currency'),
+            'target_currency__iexact': request.GET.get('target_currency'),
+            'state__iexact': request.GET.get('state'),
+            'transaction_id': request.GET.get('transaction_id'),
+            'serial': request.GET.get('serial'),
+            'source_address': request.GET.get('source_address'),
+            'target_address': request.GET.get('target_address'),
+        }
+
+        result = Transaction.objects.list_last_receivers(user=request.user, **kwargs)
+        serializer = TransactionSerializer(result.get('data'), many=True, fields=['receiver', 'created_at'])
         return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
 
     # get one transaction

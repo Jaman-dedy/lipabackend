@@ -39,7 +39,7 @@ ALLOWED_HOSTS = "*"
 
 API_URL = env('API_URL', default='http://localhost:8000/api/v1')
 APP_NAME = env('APP_NAME', default='BitLipa')
-MOBILE_APP_URL = env('MOBILE_APP_URL', default='intent://bitlipa.africa/#Intent;scheme=bitlipa;package=africa.bitlipa;end')
+MOBILE_APP_URL = env('MOBILE_APP_URL', default='intent://bitlipa.com/#Intent;scheme=bitlipa;package=com.bitlipa;end')
 MOBILE_APP_HASH = env('MOBILE_APP_HASH', default='')
 THRESH0LD_API = env('THRESH0LD_API', default='')
 # BEYONIC
