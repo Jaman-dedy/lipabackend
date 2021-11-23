@@ -51,6 +51,30 @@ class TransactionManager(models.Manager):
             }
         }
 
+    def list_last_receivers(self, user=None, **kwargs):
+        table_fields = {**kwargs}
+        page = to_int(kwargs.get('page'), 1)
+        per_page = to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT)
+
+        for key in ['page', 'per_page']:
+            table_fields.pop(key, None)  # remove fields not in the DB table
+
+        query = models.Q(**{'deleted_at': None, 'receiver__isnull': False, **remove_dict_none_values(table_fields)})
+        query = query & models.Q(sender_id=user.id)
+        query = query & (models.Q(sender_id=user.id) & ~models.Q(receiver_id=user.id))
+
+        object_list = self.model.objects.filter(query).distinct('receiver_id').order_by('-receiver_id')
+
+        data = Paginator(object_list, per_page).page(page).object_list
+        return {
+            'data': data,
+            'meta': {
+                'page': page,
+                'per_page': per_page,
+                'total': object_list.count()
+            }
+        }
+
     def send_funds(self, **kwargs):
         (transaction, errors) = (self.model(), {})
 
