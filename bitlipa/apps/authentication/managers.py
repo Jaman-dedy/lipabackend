@@ -22,7 +22,10 @@ class AuthManager:
         if not email:
             raise ValidationError(error_messages.REQUIRED.format('Email is '))
 
-        user = self.model.objects.get(email=email)
+        try:
+            user = self.model.objects.get(email=email)
+        except self.model.DoesNotExist:
+            user = self.model()
 
         user.email = self.normalize_email(kwargs.get('email'))
         user.is_email_verified = True

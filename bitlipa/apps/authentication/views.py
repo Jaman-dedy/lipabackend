@@ -34,7 +34,6 @@ class AuthViewSet(viewsets.ViewSet):
             raise core_exceptions.ValidationError(error_messages.REQUIRED.format('Email is '))
 
         email = Validator.validate_email(request.data.get('email'))
-        user = User.objects.get(email__iexact=email)
         with suppress(User.DoesNotExist):
             user = User.objects.get(email__iexact=email)
             if user.is_email_verified and user.is_phone_verified and user.phonenumber and user.pin:
@@ -42,14 +41,15 @@ class AuthViewSet(viewsets.ViewSet):
             elif not user.phonenumber or not user.pin:
                 user.delete()
 
-        email_token = JWTUtil.encode({"email": user.email, "from_email": True}, exp_hours=24)
+        email_token = JWTUtil.encode({"email": email, "from_email": True}, exp_hours=24)
         link = f'{request.data.get("redirect_link") or settings.API_URL}/auth/verify-email/{email_token}/'
         content = loader.render_to_string('verify_email.html', {
             'link': link
         })
-        send_mail('Verify account', '', settings.EMAIL_SENDER, [user.email], False, html_message=content)
+        send_mail('Verify account', '', settings.EMAIL_SENDER, [email], False, html_message=content)
         return http_response(status=status.HTTP_201_CREATED, message=success_messages.EMAIL_SENT, data={
-            "token": JWTUtil.encode({"email": email}, exp_hours=24)
+            "token": JWTUtil.encode({"email": email}, exp_hours=24),
+            "email_token": email_token if settings.DEBUG else None
         })
 
     @action(methods=['get'], detail=False, url_path=r'verify-email/(?P<token>.*)', url_name='verify_email')
@@ -59,7 +59,9 @@ class AuthViewSet(viewsets.ViewSet):
             if decoded_token.get('from_email') is not True:
                 raise drf_exceptions.PermissionDenied(error_messages.WRONG_TOKEN)
 
-            UserSerializer(User.objects.save_email(**decoded_token))
+            with suppress(User.DoesNotExist):
+                User.objects.save_email(**decoded_token)
+
             content = loader.render_to_string('email_verified.html', {
                 'link': settings.MOBILE_APP_URL.replace(
                     '/#Intent', f'?emailVerified=true&&email={decoded_token.get("email")}&&token={kwargs.get("token")}/#Intent'),
@@ -108,7 +110,7 @@ class AuthViewSet(viewsets.ViewSet):
             })
         serializer = UserSerializer(user, context={'include_wallets': True, 'request': request})
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, exp_hours=24)
-        if not len(serializer.data.get('fiat_wallets')) and user.local_currency:
+        if not len(serializer.data.get('fiat_wallets')) and user.country_code:
             fiat_wallet = FiatWallet.objects.create_wallet(user=user, **{
                 'name': 'Personal', 'currency': moneyed.get_currencies_of_country(user.country_code)[0]})
             return http_response(status=status.HTTP_200_OK, data={
