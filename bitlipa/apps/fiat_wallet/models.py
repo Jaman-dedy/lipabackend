@@ -3,8 +3,10 @@ from django.db import models
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 
+from bitlipa.utils.get_object_attr import get_object_attr
 from .managers import FiatWalletManager
 from bitlipa.apps.users.models import User
+from bitlipa.apps.currency_exchange.models import CurrencyExchange
 
 
 class FiatWallet(models.Model):
@@ -27,6 +29,19 @@ class FiatWallet(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
 
     objects = FiatWalletManager()
+
+    @property
+    def balance_in_local_currency(self):
+        local_currency = get_object_attr(self.user, 'local_currency')
+
+        if not local_currency or self.currency == local_currency or not self.balance.amount:
+            return self.balance.amount
+
+        return CurrencyExchange.objects.convert(**{
+            'amount': self.balance.amount,
+            'base_currency': self.currency,
+            'currency': local_currency ,
+        }).get('total_amount')
 
     class Meta:
         db_table = "fiat_wallet"

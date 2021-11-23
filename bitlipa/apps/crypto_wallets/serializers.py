@@ -19,6 +19,8 @@ class CryptoWalletSerializer(serializers.HyperlinkedModelSerializer):
                   'order_id_prefix',
                   'currency',
                   'balance',
+                  'balance_in_usd',
+                  'balance_in_local_currency',
                   'address',
                   'api_token',
                   'api_secret',

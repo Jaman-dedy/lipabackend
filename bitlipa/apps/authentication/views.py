@@ -35,21 +35,18 @@ class AuthViewSet(viewsets.ViewSet):
 
         email = Validator.validate_email(request.data.get('email'))
         user = User.objects.get(email__iexact=email)
-        # with suppress(User.DoesNotExist):
-        #     user = User.objects.get(email__iexact=email)
-        #     if user.is_email_verified and user.is_phone_verified and user.phonenumber and user.pin:
-        #         raise IntegrityError(error_messages.CONFLICT.format(f'{email} '))
-        #     elif not user.phonenumber or not user.pin:
-        #         user.delete()
-
-        print('url', request.data.get("redirect_link"))
+        with suppress(User.DoesNotExist):
+            user = User.objects.get(email__iexact=email)
+            if user.is_email_verified and user.is_phone_verified and user.phonenumber and user.pin:
+                raise IntegrityError(error_messages.CONFLICT.format(f'{email} '))
+            elif not user.phonenumber or not user.pin:
+                user.delete()
 
         email_token = JWTUtil.encode({"email": user.email, "from_email": True}, exp_hours=24)
         link = f'{request.data.get("redirect_link") or settings.API_URL}/auth/verify-email/{email_token}/'
         content = loader.render_to_string('verify_email.html', {
             'link': link
         })
-        print('user', user.email)
         send_mail('Verify account', '', settings.EMAIL_SENDER, [user.email], False, html_message=content)
         return http_response(status=status.HTTP_201_CREATED, message=success_messages.EMAIL_SENT, data={
             "token": JWTUtil.encode({"email": email}, exp_hours=24)
@@ -109,7 +106,7 @@ class AuthViewSet(viewsets.ViewSet):
                 "is_otp_required": True,
                 "message": success_messages.CONFIRM_LOGIN
             })
-        serializer = UserSerializer(user, context={'include_wallets': True})
+        serializer = UserSerializer(user, context={'include_wallets': True, 'request': request})
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, exp_hours=24)
         if not len(serializer.data.get('fiat_wallets')) and user.local_currency:
             fiat_wallet = FiatWallet.objects.create_wallet(user=user, **{

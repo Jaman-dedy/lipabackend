@@ -2,9 +2,12 @@ from djmoney.models.fields import MoneyField
 from django.db import models
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
+import moneyed
 
+from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.apps.users.models import User
 from .managers import CryptoWalletManager
+from bitlipa.apps.currency_exchange.models import CurrencyExchange
 
 
 class CryptoWallet(models.Model):
@@ -36,6 +39,30 @@ class CryptoWallet(models.Model):
     deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)
 
     objects = CryptoWalletManager()
+
+    @property
+    def balance_in_usd(self):
+        if self.currency == moneyed.USD or not self.balance.amount:
+            return self.balance.amount
+
+        return CurrencyExchange.objects.convert(**{
+            'amount': self.balance.amount,
+            'base_currency': self.currency,
+            'currency': moneyed.USD ,
+        }).get('total_amount')
+
+    @property
+    def balance_in_local_currency(self):
+        local_currency = get_object_attr(self.user, 'local_currency')
+
+        if not local_currency or self.currency == local_currency or not self.balance.amount:
+            return 0.0
+
+        return CurrencyExchange.objects.convert(**{
+            'amount': self.balance.amount,
+            'base_currency': self.currency,
+            'currency': local_currency ,
+        }).get('total_amount')
 
     class Meta:
         db_table = "crypto_wallets"
