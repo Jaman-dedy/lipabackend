@@ -18,10 +18,9 @@ class UserViewSet(viewsets.ViewSet):
 
     @action(methods=['put', 'get'], detail=False, url_path='*', url_name='list_update')
     def list_update(self, request):
-        AuthUtil.is_auth(request, is_admin=True)
-
         # list users
         if request.method == 'GET':
+            AuthUtil.is_auth(request, is_admin=True)
             kwargs = {
                 'page': request.GET.get('page'),
                 'per_page': request.GET.get('per_page'),
@@ -38,6 +37,7 @@ class UserViewSet(viewsets.ViewSet):
 
         # update user
         if request.method == 'PUT':
+            AuthUtil.is_auth(request)
             user = User.objects.update(email=request.decoded_token.get('email'), **request.data)
             user_data = UserSerializer(user, context={'include_wallets': True}).data if user.id == request.user.id \
                 else BasicUserSerializer(user, context={'include_wallets': True}).data
