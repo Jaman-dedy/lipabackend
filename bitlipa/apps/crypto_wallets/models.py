@@ -45,24 +45,30 @@ class CryptoWallet(models.Model):
         if self.currency == moneyed.USD or not self.balance.amount:
             return self.balance.amount
 
-        return CurrencyExchange.objects.convert(**{
-            'amount': self.balance.amount,
-            'base_currency': self.currency,
-            'currency': moneyed.USD ,
-        }).get('total_amount')
+        try:
+            return CurrencyExchange.objects.convert(**{
+                'amount': self.balance.amount,
+                'base_currency': self.currency,
+                'currency': moneyed.USD,
+            }).get('total_amount')
+        except CurrencyExchange.DoesNotExist:
+            return self.balance.amount
 
     @property
     def balance_in_local_currency(self):
         local_currency = get_object_attr(self.user, 'local_currency')
 
         if not local_currency or self.currency == local_currency or not self.balance.amount:
-            return 0.0
+            return self.balance.amount
 
-        return CurrencyExchange.objects.convert(**{
-            'amount': self.balance.amount,
-            'base_currency': self.currency,
-            'currency': local_currency ,
-        }).get('total_amount')
+        try:
+            return CurrencyExchange.objects.convert(**{
+                'amount': self.balance.amount,
+                'base_currency': self.currency,
+                'currency': local_currency,
+            }).get('total_amount')
+        except CurrencyExchange.DoesNotExist:
+            return self.balance.amount
 
     class Meta:
         db_table = "crypto_wallets"

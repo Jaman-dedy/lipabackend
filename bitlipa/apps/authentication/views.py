@@ -111,12 +111,14 @@ class AuthViewSet(viewsets.ViewSet):
         serializer = UserSerializer(user, context={'include_wallets': True, 'request': request})
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, exp_hours=24)
         if not len(serializer.data.get('fiat_wallets')) and user.country_code:
-            fiat_wallet = FiatWallet.objects.create_wallet(user=user, **{
-                'name': 'Personal', 'currency': moneyed.get_currencies_of_country(user.country_code)[0]})
-            return http_response(status=status.HTTP_200_OK, data={
-                "user": {**serializer.data, 'fiat_wallets': [FiatWalletSerializer(fiat_wallet).data]},
-                "token": user_token
-            })
+            country_currencies = moneyed.get_currencies_of_country(user.country_code)
+            if len(country_currencies) > 0:
+                fiat_wallet = FiatWallet.objects.create_wallet(user=user, **{
+                    'name': 'Personal', 'currency': moneyed.get_currencies_of_country(user.country_code)[0]})
+                return http_response(status=status.HTTP_200_OK, data={
+                    "user": {**serializer.data, 'fiat_wallets': [FiatWalletSerializer(fiat_wallet).data]},
+                    "token": user_token
+                })
         return http_response(status=status.HTTP_200_OK, data={"user": serializer.data, "token": user_token})
 
     @action(methods=['post'], detail=False, url_path='admin/login', url_name='admin/login')
