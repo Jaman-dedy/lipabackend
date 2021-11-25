@@ -37,11 +37,14 @@ class FiatWallet(models.Model):
         if not local_currency or self.currency == local_currency or not self.balance.amount:
             return self.balance.amount
 
-        return CurrencyExchange.objects.convert(**{
-            'amount': self.balance.amount,
-            'base_currency': self.currency,
-            'currency': local_currency ,
-        }).get('total_amount')
+        try:
+            return CurrencyExchange.objects.convert(**{
+                'amount': self.balance.amount,
+                'base_currency': self.currency,
+                'currency': local_currency,
+            }).get('total_amount')
+        except CurrencyExchange.DoesNotExist:
+            return self.balance.amount
 
     class Meta:
         db_table = "fiat_wallet"
