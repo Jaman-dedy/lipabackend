@@ -33,7 +33,7 @@ class WalletViewSet(viewsets.ViewSet):
     def list_wallets(self, request):
         AuthUtil.is_auth(request)
 
-        fiat_wallet = FiatWallet.objects.all().order_by('-created_at')
+        fiat_wallet = FiatWallet.objects.filter(user_id=request.user.id)
         serializer = FiatWalletSerializer(fiat_wallet, many=True)
 
         return http_response(status=status.HTTP_200_OK, data=serializer.data)
