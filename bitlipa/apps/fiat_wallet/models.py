@@ -2,6 +2,7 @@ from djmoney.models.fields import MoneyField
 from django.db import models
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
+import moneyed
 
 from bitlipa.utils.get_object_attr import get_object_attr
 from .managers import FiatWalletManager
@@ -29,6 +30,20 @@ class FiatWallet(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
 
     objects = FiatWalletManager()
+
+    @property
+    def balance_in_usd(self):
+        if self.currency == moneyed.USD or not self.balance.amount:
+            return self.balance.amount
+
+        try:
+            return CurrencyExchange.objects.convert(**{
+                'amount': self.balance.amount,
+                'base_currency': self.currency,
+                'currency': moneyed.USD,
+            }).get('total_amount')
+        except CurrencyExchange.DoesNotExist:
+            return self.balance.amount
 
     @property
     def balance_in_local_currency(self):
