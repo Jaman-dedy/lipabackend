@@ -105,6 +105,13 @@ class CryptoWalletManager(models.Manager):
 
         (count, master_wallet) = (1, self.model.objects.get(wallet_id=kwargs.get('wallet_id'), is_master=True))
 
+        check_wallet_in_same_currency = self.model.objects.filter(wallet_id=kwargs.get('wallet_id'),
+                                                                  user=user,
+                                                                  currency=master_wallet.currency,
+                                                                  is_master=False)
+        if len(check_wallet_in_same_currency):
+            raise ValidationError(str('You already have a wallet in the same currency'))
+
         with suppress(Exception):
             count = len(kwargs.get('data'))
 
