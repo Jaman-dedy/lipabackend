@@ -75,7 +75,7 @@ class TransactionManager(models.Manager):
             }
         }
 
-    def send_funds(self, **kwargs):
+    def send_funds(self, user, **kwargs):
         (transaction, errors) = (self.model(), {})
 
         errors['source_wallet'] = error_messages.REQUIRED.format('source wallet is ') if not kwargs.get('source_wallet') else None
@@ -87,10 +87,12 @@ class TransactionManager(models.Manager):
 
         try:
             source_wallet = CryptoWallet.objects.get(
-                models.Q(**{'id' if is_valid_uuid(kwargs.get('source_wallet')) else 'address': kwargs.get('source_wallet')}))
+                models.Q(**{'user_id': get_object_attr(user, 'id'),
+                            'id' if is_valid_uuid(kwargs.get('source_wallet')) else 'address': kwargs.get('source_wallet')}))
         except CryptoWallet.DoesNotExist:
             source_wallet = FiatWallet.objects.get(
-                models.Q(**{'id' if is_valid_uuid(kwargs.get('source_wallet')) else 'number': kwargs.get('source_wallet')}))
+                models.Q(**{'user_id': get_object_attr(user, 'id'),
+                            'id' if is_valid_uuid(kwargs.get('source_wallet')) else 'number': kwargs.get('source_wallet')}))
         try:
             target_wallet = CryptoWallet.objects.get(
                 models.Q(**{'id' if is_valid_uuid(kwargs.get('target_wallet')) else 'address': kwargs.get('target_wallet')}))

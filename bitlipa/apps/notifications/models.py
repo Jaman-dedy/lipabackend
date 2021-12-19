@@ -11,6 +11,7 @@ class Notification(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     sender = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
+    recipient = models.ForeignKey(User, related_name='recipient_id', on_delete=models.DO_NOTHING, null=True)
     title = models.CharField(verbose_name=_("title"), max_length=100, blank=True, null=True)
     content = models.CharField(verbose_name=_("content"), max_length=255, blank=True, null=True,)
     delivery_option = models.CharField(verbose_name=_("delivery_mode"), max_length=30, blank=True, null=True)
@@ -23,4 +24,4 @@ class Notification(models.Model):
 
     class Meta:
         db_table = "notifications"
-        ordering = ("sender", "title", "content", "delivery_option")
+        ordering = ("created_at", "updated_at", "title", "content")
