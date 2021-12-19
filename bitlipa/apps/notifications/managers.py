@@ -91,16 +91,38 @@ class NotificationsManager(models.Manager):
 
         return notification
 
-    def update(self, id=None, **kwargs):
-        notification = self.model.objects.get(id=id)
+    def update(self, id=None, user=None, **kwargs):
+        notification = self.model.objects.get(id=id) \
+            if get_object_attr(user, "is_admin")\
+            else self.model.objects.get(id=id, recipient_id=get_object_attr(user, "id"))
 
         notification.title = kwargs.get('title') or notification.title
         notification.content = kwargs.get('content') or notification.content
         notification.delivery_option = kwargs.get('delivery_option') or notification.delivery_option
         notification.image_url = kwargs.get('image_url') or notification.image_url
+        notification.status = kwargs.get('status') or notification.status
 
         notification.save(using=self._db)
         return notification
+
+    def multi_update(self, user=None, **kwargs):
+        ids = kwargs.get('IDs')
+        if not isinstance(ids, list) or not len(ids):
+            raise ValidationError(error_messages.REQUIRED.format('notification IDs are '))
+
+        notifications = self.model.objects.filter(id__in=ids) \
+            if get_object_attr(user, "is_admin")\
+            else self.model.objects.filter(id__in=ids, recipient_id=get_object_attr(user, "id"))
+
+        for notification in notifications:
+            notification.title = kwargs.get('title') or notification.title
+            notification.content = kwargs.get('content') or notification.content
+            notification.delivery_option = kwargs.get('delivery_option') or notification.delivery_option
+            notification.image_url = kwargs.get('image_url') or notification.image_url
+            notification.status = kwargs.get('status') or notification.status
+
+        self.model.objects.bulk_update(notifications, ['title', 'content', 'delivery_option', 'image_url', 'status'])
+        return notifications
 
     def delete(self, id=None, user=None):
         notification = self.model.objects.get(id=id) \
