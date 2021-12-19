@@ -14,12 +14,17 @@ class NotificationViewSet(viewsets.ViewSet):
     """
     API endpoint that allows notifications to be viewed/edited/deleted.
     """
-    @action(methods=['post', 'get'], detail=False, url_path='*', url_name='create_list_update_notifications')
+    @action(methods=['post', 'get', 'put'], detail=False, url_path='*', url_name='create_list_update_notifications')
     def create_list_notifications(self, request):
-        if request.method == 'GET':
-            return self.list_notifications(request)
         if request.method == 'POST':
             return self.create_notification(request)
+        if request.method == 'GET':
+            return self.list_notifications(request)
+        if request.method == 'PUT':
+            AuthUtil.is_auth(request)
+            result = Notification.objects.multi_update(user=request.user, **request.data)
+            serializer = NotificationSerializer(result, many=True)
+            return http_response(status=status.HTTP_200_OK, data=serializer.data)
 
     def create_notification(self, request):
         AuthUtil.is_auth(request)
@@ -32,6 +37,7 @@ class NotificationViewSet(viewsets.ViewSet):
             'page': request.GET.get('page'),
             'per_page': request.GET.get('per_page'),
             'title__iexact': request.GET.get('title'),
+            'status__iexact': request.GET.get('status'),
             'q': urllib.parse.unquote(request.GET.get('q')) if request.GET.get('q') else None
         }
         result = Notification.objects.list(user=request.user, **kwargs)
@@ -52,11 +58,11 @@ class NotificationViewSet(viewsets.ViewSet):
     def update(self, request, pk=None):
         AuthUtil.is_auth(request)
         if pk and not is_valid_uuid(pk):
-            return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('notifiction '))
+            return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('notification '))
         if request.decoded_token is None:
             return http_response(status=status.HTTP_400_BAD_REQUEST, message=error_messages.WRONG_TOKEN)
 
-        notification = Notification.objects.update(id=pk, **request.data)
+        notification = Notification.objects.update(id=pk, user=request.user, **request.data)
         serializer = NotificationSerializer(notification)
         return http_response(status=status.HTTP_200_OK, data=serializer.data)
 
