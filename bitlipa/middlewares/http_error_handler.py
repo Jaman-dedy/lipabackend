@@ -27,7 +27,9 @@ class HTTPErrorHandler:
 
         try:
             error = get_http_error_message_and_code(exception)
-            return self.format_response(http_response(status=error.get('code'), message=error.get('message'), error=error.get('error')))
+            return self.format_response(http_response(status=error.get('code'),
+                                                      message=error.get('message'),
+                                                      error=error.get('error')))
         except Exception:
             return self.format_response(http_response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

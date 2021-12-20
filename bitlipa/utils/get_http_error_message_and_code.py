@@ -16,6 +16,11 @@ def get_http_error_message_and_code(exc):
     (error, error_message) = (None, str(get_object_attr(exc, "message", exc)))
     try:
         (error, error_message) = (eval(error_message), error_messages.BAD_REQUEST)
+        if isinstance(error, dict):
+            err_msg = ''
+            for k in error:
+                err_msg += error.get(k).capitalize() if not err_msg else f'. {error.get(k).capitalize()}'
+            error_message = err_msg or error_message
     except Exception:
         contextlib.suppress(Exception)
 
