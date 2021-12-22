@@ -5,5 +5,5 @@ from . import views
 
 router = routers.DefaultRouter()
 
-router.register(r'transaction-limits', views.TransactionLimitSet, basename='transaction_limits')
+router.register(r'global-configs', views.GlobalConfigSet, basename='global_configs')
 urlpatterns = router.urls

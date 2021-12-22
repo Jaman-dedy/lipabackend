@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'django_apscheduler',
     # bitlipa apps
     'bitlipa',
+    'bitlipa.apps.global_configs',
     'bitlipa.apps.otp',
     'bitlipa.apps.authentication',
     'bitlipa.apps.users',
