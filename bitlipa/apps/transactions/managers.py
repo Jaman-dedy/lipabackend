@@ -20,7 +20,7 @@ from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.cybavo_checksum import CYBAVOChecksum
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
-from bitlipa.apps.fiat_wallet.models import FiatWallet
+from bitlipa.apps.fiat_wallets.models import FiatWallet
 from bitlipa.apps.fees.models import Fee
 from bitlipa.apps.currency_exchange.models import CurrencyExchange
 

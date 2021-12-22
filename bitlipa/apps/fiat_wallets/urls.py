@@ -5,5 +5,5 @@ from . import views
 
 router = routers.DefaultRouter()
 
-router.register(r'fiat-wallets', views.WalletViewSet, basename='fiat_wallet')
+router.register(r'fiat-wallets', views.WalletViewSet, basename='fiat_wallets')
 urlpatterns = router.urls

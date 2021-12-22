@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from bitlipa.apps.fiat_wallet.models import FiatWallet
+from bitlipa.apps.fiat_wallets.models import FiatWallet
 
 
 class FiatWalletSerializer(serializers.HyperlinkedModelSerializer):

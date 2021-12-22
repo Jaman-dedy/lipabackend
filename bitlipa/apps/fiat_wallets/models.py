@@ -8,6 +8,7 @@ from bitlipa.utils.get_object_attr import get_object_attr
 from .managers import FiatWalletManager
 from bitlipa.apps.users.models import User
 from bitlipa.apps.currency_exchange.models import CurrencyExchange
+from bitlipa.apps.global_configs.models import GlobalConfig
 
 
 class FiatWallet(models.Model):
@@ -61,6 +62,30 @@ class FiatWallet(models.Model):
         except CurrencyExchange.DoesNotExist:
             return self.balance.amount
 
+    def create_default(self, user):
+        (wallet, currency, local_currency) = (None, '', '')
+
+        base_currency = GlobalConfig.objects.filter(name__iexact='base currency').first()
+        supported_currencies = GlobalConfig.objects.filter(name__iexact='supported currencies').first()
+
+        if user.country_code:
+            country_currencies = moneyed.get_currencies_of_country(user.country_code)
+            if len(country_currencies) > 0:
+                local_currency = moneyed.get_currencies_of_country(user.country_code)[0]
+
+        if local_currency \
+                and isinstance(get_object_attr(supported_currencies, 'data'), list) \
+                and str(local_currency).upper() in list(map(str.upper, supported_currencies.data)):
+            currency = str(local_currency).upper()
+
+        if not currency and get_object_attr(base_currency, 'data'):
+            currency = base_currency.data
+
+        if currency:
+            wallet = self.objects.create_wallet(user=user, **{'name': 'Personal', 'currency': currency})
+
+        return wallet
+
     class Meta:
-        db_table = "fiat_wallet"
+        db_table = "fiat_wallets"
         ordering = ("name", "currency", "number")
