@@ -9,7 +9,7 @@ from .models import TransactionLimit
 from .serializers import TransactionLimitSerializer
 
 
-class WalletViewSet(viewsets.ViewSet):
+class TransactionLimitSet(viewsets.ViewSet):
     """
     API endpoint that allows transaction limits to be viewed/edited/deleted.
     """
