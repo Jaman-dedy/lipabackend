@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
 from bitlipa.apps.users.models import User
-from bitlipa.apps.fiat_wallet.models import FiatWallet
+from bitlipa.apps.fiat_wallets.models import FiatWallet
 from bitlipa.utils.jwt_util import JWTUtil
 
 
@@ -13,7 +13,7 @@ class WalletCrudAPIViewTestCase(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.url = reverse('fiat_wallet-create_list_update_wallets')
-        self.default_wallet = FiatWallet(name="sport", currency="JAMAN-USD-01", currency="USD")
+        self.default_wallet = FiatWallet(name="sport", number="JAMAN-USD-01", currency="USD")
         user = User(email='johnsmith@gmail.com')
         user.save()
         self.default_wallet.save()
@@ -21,7 +21,6 @@ class WalletCrudAPIViewTestCase(APITestCase):
     def test_wallet_creation(self):
         wallet_data = {
             "name": "Business",
-            "currency": "USD-01-JAMAN",
             "currency": "USD",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
@@ -34,7 +33,6 @@ class WalletCrudAPIViewTestCase(APITestCase):
     def test_wallet_creation_name_required(self):
         wallet_data = {
             "name": "",
-            "currency": "USD-01-JAMAN",
             "currency": "USD",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
@@ -45,7 +43,6 @@ class WalletCrudAPIViewTestCase(APITestCase):
     def test_wallet_creation_currency_required(self):
         wallet_data = {
             "name": "sport",
-            "currency": "USD-01-JAMAN",
             "currency": "",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})
@@ -57,7 +54,6 @@ class WalletCrudAPIViewTestCase(APITestCase):
 
         wallet_data = {
             "name": "Business",
-            "currency": "USD-01-JAMAN",
             "currency": "USD",
         }
         token = JWTUtil.encode({'email': 'johnsmith@gmail.com'})

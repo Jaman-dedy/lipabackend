@@ -4,7 +4,7 @@ from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.to_decimal import to_decimal
 from bitlipa.apps.user_role.models import UserRole
 from bitlipa.apps.users.models import User
-from bitlipa.apps.fiat_wallet.models import FiatWallet
+from bitlipa.apps.fiat_wallets.models import FiatWallet
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
 
 

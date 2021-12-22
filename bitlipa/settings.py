@@ -79,7 +79,7 @@ INSTALLED_APPS = [
     'bitlipa.apps.otp',
     'bitlipa.apps.authentication',
     'bitlipa.apps.users',
-    'bitlipa.apps.fiat_wallet',
+    'bitlipa.apps.fiat_wallets',
     'bitlipa.apps.crypto_wallets',
     'bitlipa.apps.transactions',
     'bitlipa.apps.currency_exchange',
