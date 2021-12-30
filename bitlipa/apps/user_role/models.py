@@ -1,7 +1,5 @@
 from django.db import models
 from uuid import uuid4
-from django.utils.translation import gettext_lazy as _
-from django.core import serializers
 
 from .managers import UserRoleManager
 from bitlipa.apps.users.models import User
@@ -27,7 +25,4 @@ class UserRole(models.Model):
     def get_role(self):
         serializer = RoleSerializer(self.role).data
         data = serializer.get('id')
-
         return data
-
-        # return RoleSerializer(self.role).data
