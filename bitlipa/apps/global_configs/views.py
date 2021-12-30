@@ -9,7 +9,7 @@ from .models import GlobalConfig
 from .serializers import GlobalConfigSerializer
 
 
-class GlobalConfigSet(viewsets.ViewSet):
+class GlobalConfigViewSet(viewsets.ViewSet):
     """
     API endpoint that allows global configs to be viewed/edited/deleted.
     """

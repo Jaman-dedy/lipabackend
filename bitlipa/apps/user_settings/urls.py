@@ -5,5 +5,5 @@ from . import views
 
 router = routers.DefaultRouter()
 
-router.register(r'global-configs', views.GlobalConfigViewSet, basename='global_configs')
+router.register(r'user-settings', views.UserSettingViewSet, basename='user_settings')
 urlpatterns = router.urls
