@@ -8,7 +8,14 @@ import moneyed
 
 from bitlipa.resources.constants import MAX_PIN_CHANGE_COUNT, MAX_PIN_CHANGE_DAYS_INTERVAL
 from bitlipa.resources import error_messages
+<<<<<<< HEAD
 from bitlipa.utils.get_object_attr import get_object_attr
+=======
+from bitlipa.utils.validator import Validator
+from bitlipa.apps.otp.models import OTP
+from bitlipa.apps.phones.models import Phone
+# from bitlipa.apps.user_activity.models import UserActivity
+>>>>>>> (BITLIPA) add phone numbers
 from bitlipa.utils.send_sms import send_sms
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.validator import Validator
@@ -35,6 +42,7 @@ class AuthManager:
 
     def save_or_verify_phonenumber(self, id=None, email=None, **kwargs):
         user = self.model.objects.get(email=email) if email else self.model.objects.get(id=id)
+        phone = Phone.objects.get(email=email)
 
         if not email:
             raise ValidationError(error_messages.REQUIRED.format('Email is '))
@@ -47,18 +55,35 @@ class AuthManager:
         if kwargs.get('OTP'):
             otp_obj = OTP.objects.find(
                 otp=kwargs.get('OTP'), email=email, phonenumber=kwargs.get('phonenumber'), destination=OTP.OTPDestinations.SMS)
-            user.phonenumber = kwargs.get('phonenumber')
-            user.is_phone_verified = True
-            user.save(using=self._db)
-            OTP.objects.remove_all(email=email, phonenumber=kwargs.get('phonenumber'), destination=OTP.OTPDestinations.SMS)
-            return user
+            if kwargs.get('secondary'):
+                
+                phone.phonenumber = kwargs.get('phonenumber')
+                phone.is_phone_verified = True
+                phone.save(using=self._db)
+                OTP.objects.remove_all(email=email, phonenumber=kwargs.get('phonenumber'), destination=OTP.OTPDestinations.SMS)
+                return phone
+            else : 
+                user.phonenumber = kwargs.get('phonenumber')
+                user.is_phone_verified = True
+                user.save(using=self._db)
+                OTP.objects.remove_all(email=email, phonenumber=kwargs.get('phonenumber'), destination=OTP.OTPDestinations.SMS)
+                return user
 
         otp_obj = OTP.objects.save(email=email, phonenumber=kwargs.get('phonenumber'), digits=4)
         message = f'<#> Your {settings.APP_NAME} verification code is: {otp_obj.otp}\n {settings.MOBILE_APP_HASH}'
         send_sms(otp_obj.phonenumber, message=message)
+<<<<<<< HEAD
         return user
 
     def create_user(self, creator, **kwargs):
+=======
+        if kwargs.get('secondary'):
+            return phone
+        else : 
+            return user
+    
+    def create(self, **kwargs):
+>>>>>>> (BITLIPA) add phone numbers
         user = self.model()
 
         if not kwargs.get('email'):
