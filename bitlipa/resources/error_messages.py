@@ -15,13 +15,14 @@ AUTHENTICATION_REQUIRED = "authentication required"
 ACCESS_DENIED = "access denied! Not enough permissions"
 EMAIL_NOT_VERIFIED = "email not verified"
 PHONE_NOT_VERIFIED = "phone number not verified"
+WRONG_CREDENTAILS = "wrong email or PIN"
+WRONG_PIN = "wrong PIN"
+ACCOUNT_LOCKED_DUE_WRONG_LOGIN_ATTEMPTS = "your account is locked due to multiple unsuccessful login attempts"
+ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES = "your account is locked due to suspicious activities"
 
 # user
 PHONE_NUMBER_TAKEN = "user with this phone number{} already exists"
 EMAIL_TAKEN = "user with this email{} already exists"
-WRONG_CREDENTAILS = "wrong email or PIN"
-WRONG_PIN = "wrong PIN"
-ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES = "your account is locked due to suspicious activities"
 
 # transactions
 INVALID_AMOUNT = "amount can not be a negative number or 0"

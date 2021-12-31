@@ -49,6 +49,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'initial_pin_change_date',
                   'pin_change_count',
                   'is_account_blocked',
+                  'last_wrong_login_attempt_date',
+                  'wrong_login_attempts_count',
                   'created_at',
                   'updated_at',
                   'deleted_at']

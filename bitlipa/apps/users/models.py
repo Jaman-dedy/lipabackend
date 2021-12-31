@@ -43,6 +43,8 @@ class User(models.Model):
     initial_pin_change_date = models.DateTimeField(auto_now=False, verbose_name=_("initial PIN change date"), null=True)
     pin_change_count = models.IntegerField(verbose_name=_("PIN change count"), blank=False, null=False, default=0)
     is_account_blocked = models.BooleanField(verbose_name="is account blocked", blank=False, null=False, default=False)
+    last_wrong_login_attempt_date = models.DateTimeField(auto_now=False, verbose_name=_("last wrong login attempt date"), null=True)
+    wrong_login_attempts_count = models.IntegerField(verbose_name=_("wrong login attempts count"), blank=False, null=False, default=0)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
     deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)
