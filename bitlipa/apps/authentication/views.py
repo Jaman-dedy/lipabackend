@@ -213,3 +213,9 @@ class AuthViewSet(viewsets.ViewSet):
                 'link': settings.MOBILE_APP_URL.replace(
                     '/#Intent', f'?reset={field_to_reset}&token={kwargs.get("token")}/#Intent')})
             return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, html=content)
+
+    @action(methods=['put'], detail=False, url_path='change-pin', url_name='change_pin')
+    def change_pin(self, request):
+        AuthUtil.is_auth(request)
+        User.objects.change_pin(user=request.user, **request.data)
+        return http_response(status=status.HTTP_200_OK, message="PIN changed successfully")

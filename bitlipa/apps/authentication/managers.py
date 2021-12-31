@@ -242,3 +242,18 @@ class AuthManager:
         setattr(user, field_to_reset.lower(), make_password(kwargs.get(field_to_reset)))
         user.save(using=self._db)
         return user
+
+    def change_pin(self, user, **kwargs):
+        errors = {}
+        errors['current_PIN'] = error_messages.REQUIRED.format('current PIN is ') if not kwargs.get('current_PIN') else None
+        errors['new_PIN'] = error_messages.REQUIRED.format('new PIN is ') if not kwargs.get('new_PIN') else None
+
+        if len(remove_dict_none_values(errors)) != 0:
+            raise ValidationError(str(errors))
+
+        if not check_password(kwargs.get("current_PIN"), user.pin):
+            raise PermissionDenied(error_messages.WRONG_PIN)
+
+        user.pin = make_password(kwargs.get('new_PIN'))
+        user.save(using=self._db)
+        return user

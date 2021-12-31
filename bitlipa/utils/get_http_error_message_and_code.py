@@ -19,7 +19,7 @@ def get_http_error_message_and_code(exc):
         if isinstance(error, dict):
             err_msg = ''
             for k in error:
-                err_msg += error.get(k).capitalize() if not err_msg else f'. {error.get(k).capitalize()}'
+                err_msg += error.get(k) if not err_msg else f'. {error.get(k)}'
             error_message = err_msg or error_message
     except Exception:
         contextlib.suppress(Exception)

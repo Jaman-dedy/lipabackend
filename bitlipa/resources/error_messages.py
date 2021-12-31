@@ -20,6 +20,7 @@ PHONE_NOT_VERIFIED = "phone number not verified"
 PHONE_NUMBER_TAKEN = "user with this phone number{} already exists"
 EMAIL_TAKEN = "user with this email{} already exists"
 WRONG_CREDENTAILS = "wrong email or PIN"
+WRONG_PIN = "wrong PIN"
 ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES = "your account is locked due to suspicious activities"
 
 # transactions
