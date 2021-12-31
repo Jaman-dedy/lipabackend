@@ -11,10 +11,9 @@ class GlobalConfig(models.Model):
         self._data = val
 
     def get_data(self):
-        data = self._data
         with suppress(Exception):
-            data = eval(data)
-        return data
+            return eval(self._data)
+        return self._data
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     name = models.CharField(verbose_name=_("name"), max_length=30, blank=False, null=False)
@@ -28,7 +27,7 @@ class GlobalConfig(models.Model):
     objects = GlobalConfigManager()
 
     def __str__(self):
-        return self.amount
+        return self._data
 
     class Meta:
         db_table = "global_configs"

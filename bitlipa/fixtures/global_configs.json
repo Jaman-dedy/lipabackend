@@ -1,0 +1,38 @@
+[
+  {
+    "model": "global_configs.GlobalConfig",
+    "pk": "faeb1f20-1294-4b9d-a7b8-b5bda3cd5965",
+    "fields": {
+      "name": "max wrong login attempts",
+      "_data": 3,
+      "description": "Number of unsuccessful login attempts before locking an account",
+      "created_at": "2021-12-22T00:08:29.873936Z",
+      "updated_at": "2021-12-22T00:11:37.445837Z",
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "global_configs.GlobalConfig",
+    "pk": "09d1f9c7-108d-4b26-bd3b-3670942697d8",
+    "fields": {
+      "name": "Base currency",
+      "_data": "KES",
+      "description": "Kenyan shilling",
+      "created_at": "2021-12-22T00:08:29.873936Z",
+      "updated_at": "2021-12-22T00:11:37.445837Z",
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "global_configs.GlobalConfig",
+    "pk": "b21856a2-38b1-435d-9776-95fa41e43c15",
+    "fields": {
+      "name": "Supported currencies",
+      "_data": ["KES"],
+      "description": "",
+      "created_at": "2021-12-22T00:08:29.873936Z",
+      "updated_at": "2021-12-22T00:11:37.445837Z",
+      "deleted_at": null
+    }
+  }
+]

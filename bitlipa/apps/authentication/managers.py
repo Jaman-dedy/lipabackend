@@ -8,11 +8,11 @@ import moneyed
 
 from bitlipa.resources.constants import MAX_PIN_CHANGE_COUNT, MAX_PIN_CHANGE_DAYS_INTERVAL
 from bitlipa.resources import error_messages
-from bitlipa.utils.validator import Validator
-from bitlipa.apps.otp.models import OTP
-# from bitlipa.apps.user_activity.models import UserActivity
 from bitlipa.utils.send_sms import send_sms
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
+from bitlipa.utils.validator import Validator
+from bitlipa.apps.otp.models import OTP
+from bitlipa.apps.global_configs.models import GlobalConfig
 
 
 class AuthManager:
@@ -115,7 +115,7 @@ class AuthManager:
         user.save(using=self._db)
         return user
 
-    def check_login_from_different_device(user, **kwargs):
+    def check_login_device(user, **kwargs):
         if user.device_id and not kwargs.get('OTP') and kwargs.get('device_id') != user.device_id:
             return OTP.objects.save(email=user.email,
                                     phonenumber=user.phonenumber,
@@ -129,7 +129,7 @@ class AuthManager:
                              phonenumber=user.phonenumber,
                              destination=OTP.OTPDestinations.EMAIL)
 
-    def check_login_from_different_country(user, **kwargs):
+    def check_login_country(user, **kwargs):
         new_country = kwargs.get('country')
         if new_country and user.country and not kwargs.get('OTP') and str(new_country).lower() != user.country.lower():
             return OTP.objects.save(email=user.email,
@@ -154,33 +154,41 @@ class AuthManager:
             raise ValidationError(str(errors))
 
         user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
-        otp_obj = AuthManager.check_login_from_different_device(user, **kwargs) or\
-            AuthManager.check_login_from_different_country(user, **kwargs)
-
-        if otp_obj:
-            return otp_obj
-
-        OTP.objects.remove_all(email=user.email, phonenumber=user.phonenumber, destination=OTP.OTPDestinations.EMAIL)
-
-        user.device_id = kwargs.get('device_id') or user.device_id
-        user.country = kwargs.get('country') or user.country
-        user.country_code = kwargs.get('country_code') or user.country_code
-        user.local_currency = kwargs.get('local_currency') or user.local_currency
-        user.firebase_token = kwargs.get('firebase_token') or user.firebase_token
-
-        if not user.local_currency and user.country_code:
-            with suppress(Exception):
-                user.local_currency = moneyed.get_currencies_of_country(user.country_code)[0]
-
-        user.save(using=self._db)
 
         if user.is_email_verified is False or user.is_phone_verified is False:
             errors['email'] = error_messages.EMAIL_NOT_VERIFIED if user.is_email_verified is False else None
             errors['phonenumber'] = error_messages.PHONE_NOT_VERIFIED if user.is_phone_verified is False else None
             raise PermissionDenied(str(remove_dict_none_values(errors)))
 
+        with suppress(GlobalConfig.DoesNotExist):
+            max_wrong_login_attempts = GlobalConfig.objects.get(name__iexact='max wrong login attempts')
+            if user.wrong_login_attempts_count >= max_wrong_login_attempts.data:
+                raise PermissionDenied(error_messages.ACCOUNT_LOCKED_DUE_WRONG_LOGIN_ATTEMPTS)
+
         if not check_password(kwargs.get("PIN"), user.pin):
+            user.last_wrong_login_attempt_date = datetime.now()
+            user.wrong_login_attempts_count += 1
+            user.save(using=self._db)
             raise PermissionDenied(error_messages.WRONG_CREDENTAILS)
+
+        otp_obj = AuthManager.check_login_device(user, **kwargs) or AuthManager.check_login_country(user, **kwargs)
+        if otp_obj:
+            return otp_obj
+
+        user.device_id = kwargs.get('device_id') or user.device_id
+        user.country = kwargs.get('country') or user.country
+        user.country_code = kwargs.get('country_code') or user.country_code
+        user.local_currency = kwargs.get('local_currency') or user.local_currency
+        user.firebase_token = kwargs.get('firebase_token') or user.firebase_token
+        user.last_wrong_login_attempt_date = None
+        user.wrong_login_attempts_count = 0
+
+        if not user.local_currency and user.country_code:
+            with suppress(Exception):
+                user.local_currency = moneyed.get_currencies_of_country(user.country_code)[0]
+
+        user.save(using=self._db)
+        OTP.objects.remove_all(email=user.email, phonenumber=user.phonenumber, destination=OTP.OTPDestinations.EMAIL)
         return user
 
     def login_admin(self, **kwargs):
