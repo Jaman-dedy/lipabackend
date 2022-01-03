@@ -17,7 +17,7 @@ EMAIL_NOT_VERIFIED = "email not verified"
 PHONE_NOT_VERIFIED = "phone number not verified"
 WRONG_CREDENTAILS = "wrong email or PIN"
 WRONG_PIN = "wrong PIN"
-ACCOUNT_LOCKED_DUE_WRONG_LOGIN_ATTEMPTS = "your account is locked due to multiple unsuccessful login attempts"
+ACCOUNT_LOCKED_DUE_WRONG_LOGIN_ATTEMPTS = "your account is locked due to multiple unsuccessful login attempts. It will be unlocked automatically in 24 hours"
 ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES = "your account is locked due to suspicious activities"
 
 # user

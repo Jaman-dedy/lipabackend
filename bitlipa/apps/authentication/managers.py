@@ -153,7 +153,13 @@ class AuthManager:
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
-        user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+        try:
+            user = self.model.objects.get(email=self.normalize_email(kwargs.get('email')))
+        except self.model.DoesNotExist:
+            raise PermissionDenied(error_messages.WRONG_CREDENTAILS)
+
+        if user.is_account_blocked:
+            raise PermissionDenied(error_messages.ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES)
 
         if user.is_email_verified is False or user.is_phone_verified is False:
             errors['email'] = error_messages.EMAIL_NOT_VERIFIED if user.is_email_verified is False else None
@@ -163,7 +169,12 @@ class AuthManager:
         with suppress(GlobalConfig.DoesNotExist):
             max_wrong_login_attempts = GlobalConfig.objects.get(name__iexact='max wrong login attempts')
             if user.wrong_login_attempts_count >= max_wrong_login_attempts.data:
-                raise PermissionDenied(error_messages.ACCOUNT_LOCKED_DUE_WRONG_LOGIN_ATTEMPTS)
+                date_diff = datetime.now(timezone.utc) - user.last_wrong_login_attempt_date
+                if date_diff.days < 1:
+                    raise PermissionDenied(error_messages.ACCOUNT_LOCKED_DUE_WRONG_LOGIN_ATTEMPTS)
+                else:
+                    user.last_wrong_login_attempt_date = None
+                    user.wrong_login_attempts_count = 0
 
         if not check_password(kwargs.get("PIN"), user.pin):
             user.last_wrong_login_attempt_date = datetime.now()
