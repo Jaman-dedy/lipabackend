@@ -97,9 +97,6 @@ class AuthViewSet(viewsets.ViewSet):
     @action(methods=['post'], detail=False, url_path='login', url_name='login')
     def login_user(self, request):
         user = User.objects.login(**request.data)
-        if get_object_attr(user, 'is_account_blocked'):
-            return http_response(status=status.HTTP_403_FORBIDDEN,
-                                 message=error_messages.ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES)
         if get_object_attr(user, 'otp'):
             content = loader.render_to_string('confirm_login.html', {'verification_code': user.otp})
             send_mail('Confirm login', '', settings.EMAIL_SENDER, [user.email], False, html_message=content)
