@@ -74,12 +74,12 @@ class CurrencyExchangeManager(models.Manager):
         return {
             'base_currency': kwargs.get('base_currency'),
             'currency': kwargs.get('currency'),
-            'source_amount': format_number(source_amount),
-            'total_source_amount': format_number(total_source_amount),
-            'fee': format_number(fx_fee),
-            'rate': format_number(rate),
-            'amount': format_number(amount),
-            'total_amount': format_number(total_amount),
+            'source_amount': format_number(source_amount, kwargs.get('decimal_places')),
+            'total_source_amount': format_number(total_source_amount, kwargs.get('decimal_places')),
+            'fee': format_number(fx_fee, kwargs.get('decimal_places')),
+            'rate': format_number(rate, kwargs.get('decimal_places')),
+            'amount': format_number(amount, kwargs.get('decimal_places')),
+            'total_amount': format_number(total_amount, kwargs.get('decimal_places')),
             'date': currency_exchange.date,
         }
 
