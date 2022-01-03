@@ -50,6 +50,7 @@ class CryptoWallet(models.Model):
                 'amount': self.balance.amount,
                 'base_currency': self.currency,
                 'currency': moneyed.USD,
+                'decimal_places': 2
             }).get('total_amount')
         except CurrencyExchange.DoesNotExist:
             return self.balance.amount
@@ -66,6 +67,7 @@ class CryptoWallet(models.Model):
                 'amount': self.balance.amount,
                 'base_currency': self.currency,
                 'currency': local_currency,
+                'decimal_places': 2
             }).get('total_amount')
         except CurrencyExchange.DoesNotExist:
             return self.balance.amount

@@ -24,8 +24,8 @@ class FiatWallet(models.Model):
         blank=False,
         null=False,
         default=0,
-        max_digits=36,
-        decimal_places=18,
+        max_digits=18,
+        decimal_places=2,
         currency_field_name='currency'
     )
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
@@ -42,6 +42,7 @@ class FiatWallet(models.Model):
                 'amount': self.balance.amount,
                 'base_currency': self.currency,
                 'currency': moneyed.USD,
+                'decimal_places': 2
             }).get('total_amount')
         except CurrencyExchange.DoesNotExist:
             return self.balance.amount
@@ -58,6 +59,7 @@ class FiatWallet(models.Model):
                 'amount': self.balance.amount,
                 'base_currency': self.currency,
                 'currency': local_currency,
+                'decimal_places': 2
             }).get('total_amount')
         except CurrencyExchange.DoesNotExist:
             return self.balance.amount
