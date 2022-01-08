@@ -83,7 +83,8 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False, url_path='signup', url_name='signup')
     def create_user(self, request):
-        serializer = UserSerializer(User.objects.create(**request.data))
+        AuthUtil.is_auth(request, is_admin=True)
+        serializer = UserSerializer(User.objects.create_user(creator=request.user, **request.data))
 
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 

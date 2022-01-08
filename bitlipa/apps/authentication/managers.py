@@ -8,6 +8,7 @@ import moneyed
 
 from bitlipa.resources.constants import MAX_PIN_CHANGE_COUNT, MAX_PIN_CHANGE_DAYS_INTERVAL
 from bitlipa.resources import error_messages
+from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.send_sms import send_sms
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.validator import Validator
@@ -57,32 +58,31 @@ class AuthManager:
         send_sms(otp_obj.phonenumber, message=message)
         return user
 
-    def create(self, **kwargs):
+    def create_user(self, creator, **kwargs):
         user = self.model()
 
         if not kwargs.get('email'):
             raise ValidationError(error_messages.REQUIRED.format('Email is '))
-
         if not kwargs.get('phonenumber'):
             raise ValidationError(error_messages.REQUIRED.format('Phone number is '))
-
         if not kwargs.get('PIN'):
             raise ValidationError(error_messages.REQUIRED.format('PIN is '))
 
-        user.email = self.normalize_email(kwargs.get('email'))
         phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message=error_messages.WRONG_PHONE_NUMBER)
         phone_regex(kwargs.get('phonenumber'))
+        user.email = self.normalize_email(kwargs.get('email'))
         user.phonenumber = kwargs.get('phonenumber')
-
         user.first_name = kwargs.get('first_name')
         user.middle_name = kwargs.get('middle_name')
         user.last_name = kwargs.get('last_name')
         user.pin = make_password(kwargs.get('PIN'))
+        user.creator_id = get_object_attr(creator, 'id')
 
         if kwargs.get('password'):
             user.password = make_password(kwargs.get('password'))
 
         user.is_phone_verified = True
+        user.is_email_verified = True
         user.save(using=self._db)
         return user
 
