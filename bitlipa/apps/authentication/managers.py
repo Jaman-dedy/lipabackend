@@ -8,14 +8,9 @@ import moneyed
 
 from bitlipa.resources.constants import MAX_PIN_CHANGE_COUNT, MAX_PIN_CHANGE_DAYS_INTERVAL
 from bitlipa.resources import error_messages
-<<<<<<< HEAD
 from bitlipa.utils.get_object_attr import get_object_attr
-=======
-from bitlipa.utils.validator import Validator
-from bitlipa.apps.otp.models import OTP
 from bitlipa.apps.phones.models import Phone
 # from bitlipa.apps.user_activity.models import UserActivity
->>>>>>> (BITLIPA) add phone numbers
 from bitlipa.utils.send_sms import send_sms
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.validator import Validator
@@ -72,18 +67,12 @@ class AuthManager:
         otp_obj = OTP.objects.save(email=email, phonenumber=kwargs.get('phonenumber'), digits=4)
         message = f'<#> Your {settings.APP_NAME} verification code is: {otp_obj.otp}\n {settings.MOBILE_APP_HASH}'
         send_sms(otp_obj.phonenumber, message=message)
-<<<<<<< HEAD
-        return user
-
-    def create_user(self, creator, **kwargs):
-=======
         if kwargs.get('secondary'):
             return phone
         else : 
             return user
     
-    def create(self, **kwargs):
->>>>>>> (BITLIPA) add phone numbers
+    def create_user(self, creator, **kwargs):
         user = self.model()
 
         if not kwargs.get('email'):

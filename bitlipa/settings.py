@@ -92,11 +92,8 @@ INSTALLED_APPS = [
     'bitlipa.apps.transaction_limits',
     'bitlipa.apps.user_activity',
     'bitlipa.apps.enigma',
-<<<<<<< HEAD
-    'bitlipa.apps.user_settings'
-=======
+    'bitlipa.apps.user_settings',
     'bitlipa.apps.phones'
->>>>>>> (BITLIPA) add phone numbers
 ]
 
 MIDDLEWARE = [

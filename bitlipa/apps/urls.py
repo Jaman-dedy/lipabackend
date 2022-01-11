@@ -22,9 +22,6 @@ urlpatterns = [
     path('', include('bitlipa.apps.transaction_limits.urls')),
     path('', include('bitlipa.apps.user_activity.urls')),
     path('', include('bitlipa.apps.enigma.urls')),
-<<<<<<< HEAD
     path('', include('bitlipa.apps.user_settings.urls')),
-=======
     path('', include('bitlipa.apps.phones.urls'))
->>>>>>> (BITLIPA) add phone numbers
 ]
