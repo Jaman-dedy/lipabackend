@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  bitlipa-api:
+    build: .
+    container_name: bitlipa-api
+    command: ./scripts/run.sh
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgresdb
+  postgresdb:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_volume:/var/opt/postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=bitlipa
+    ports:
+      - 5432:5432
+volumes:
+  postgres_volume:

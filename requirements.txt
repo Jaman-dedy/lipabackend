@@ -66,7 +66,6 @@ pre-commit==2.13.0
 prompt-toolkit==3.0.19
 proto-plus==1.19.0
 protobuf==3.18.0
-psycopg2==2.8.6
 py-log==2.5
 py-moneyed==1.2
 pyasn1==0.4.8
@@ -96,3 +95,4 @@ vine==5.0.0
 virtualenv==20.4.7
 wcwidth==0.2.5
 whitenoise==5.2.0
+psycopg2-binary>=2.8

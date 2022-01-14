@@ -14,6 +14,7 @@ from bitlipa.apps.fiat_wallets.models import FiatWallet
 from bitlipa.apps.fiat_wallets.serializers import FiatWalletSerializer
 from bitlipa.apps.users.models import User
 from bitlipa.apps.users.serializers import UserSerializer
+from bitlipa.apps.phones.serializers import PhoneSerializer
 from bitlipa.resources import error_messages
 from bitlipa.utils.get_http_error_message_and_code import get_http_error_message_and_code
 from bitlipa.utils.http_response import http_response
@@ -77,13 +78,16 @@ class AuthViewSet(viewsets.ViewSet):
     @action(methods=['put'], detail=False, url_path='verify-phonenumber', url_name='verify_phonenumber')
     def verify_phonenumber(self, request):
         AuthUtil.is_auth(request)
-        user = User.objects.save_or_verify_phonenumber(email=request.decoded_token.get('email'), **request.data)
-        serializer = UserSerializer(user)
+        data = User.objects.save_or_verify_phonenumber(email=request.decoded_token.get('email'), **request.data)
+        if request.data.get('secondary'):
+            serializer = PhoneSerializer(data)
+        else : 
+            serializer = UserSerializer(data)
         return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, data=serializer.data)
 
     @action(methods=['post'], detail=False, url_path='signup', url_name='signup')
     def create_user(self, request):
-        AuthUtil.is_auth(request, is_admin=True)
+        # AuthUtil.is_auth(request, is_admin=True)
         serializer = UserSerializer(User.objects.create_user(creator=request.user, **request.data))
 
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)

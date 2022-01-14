@@ -22,6 +22,7 @@ ACCOUNT_LOCKED_DUE_TO_SUSPICIOUS_ACTIVITIES = "your account is locked due to sus
 
 # user
 PHONE_NUMBER_TAKEN = "user with this phone number{} already exists"
+PHONE_NUMBER_EXIST = "this phone number{} already exists"
 EMAIL_TAKEN = "user with this email{} already exists"
 
 # transactions

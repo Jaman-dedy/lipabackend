@@ -23,4 +23,5 @@ urlpatterns = [
     path('', include('bitlipa.apps.user_activity.urls')),
     path('', include('bitlipa.apps.enigma.urls')),
     path('', include('bitlipa.apps.user_settings.urls')),
+    path('', include('bitlipa.apps.phones.urls'))
 ]
