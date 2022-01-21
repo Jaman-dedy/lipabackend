@@ -22,7 +22,7 @@ while [ $# -gt 0 ]; do
 done
 
 env=${env:-"staging"}
-branch=${branch:-"HEAD:main"}
+branch=${branch:-"main"}
 
 get_env_value() {
   env_variable=$(grep -w .env.${env} -e "${1}" | sed "s/${1}=//")
@@ -74,4 +74,4 @@ else
   force=""
 fi
 
-git push heroku-${env} ${branch} ${force}
+git push heroku-${env} HEAD:${branch} ${force}
