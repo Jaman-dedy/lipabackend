@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from django.db import transaction as db_transaction
 
 from bitlipa.resources import error_messages
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
@@ -23,6 +24,7 @@ class LoanViewSet(viewsets.ViewSet):
         if request.method == 'POST':
             return self.create_loan(request)
 
+    @db_transaction.atomic
     def create_loan(self, request):
         AuthUtil.is_auth(request, is_admin=True)
         serializer = LoanSerializer(Loan.objects.create_loan(**request.data))
@@ -33,8 +35,7 @@ class LoanViewSet(viewsets.ViewSet):
         kwargs = {
             'page': str(request.GET.get('page')),
             'per_page': str(request.GET.get('per_page')),
-            'name__iexact': request.GET.get('name'),
-            'type__iexact': request.GET.get('type'),
+            'currency__iexact': request.GET.get('currency'),
         }
         result = Loan.objects.list(**kwargs)
         serializer = LoanSerializer(result.get('data'), many=True)

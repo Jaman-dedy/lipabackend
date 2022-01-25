@@ -14,7 +14,8 @@ class UserSettingManager(models.Manager):
         for key in ['page', 'per_page']:
             table_fields.pop(key, None)  # remove fields not in the DB table
 
-        return self.model.objects.filter(**remove_dict_none_values(table_fields)).order_by('-created_at')
+        return self.model.objects.filter(**{
+            'deleted_at': None, **remove_dict_none_values(table_fields)}).order_by('-created_at')
 
     def create_user_setting(self, user, **kwargs):
         (user_setting, errors) = (self.model(), {})
