@@ -19,7 +19,8 @@ class TransactionLimitManager(models.Manager):
         for key in ['page', 'per_page']:
             table_fields.pop(key, None)  # remove fields not in the DB table
 
-        object_list = self.model.objects.filter(**remove_dict_none_values(table_fields)).order_by('-created_at')
+        object_list = self.model.objects.filter(**{
+            'deleted_at': None, **remove_dict_none_values(table_fields)}).order_by('-created_at')
         return {
             'data': Paginator(object_list, per_page).page(page).object_list,
             'meta': {

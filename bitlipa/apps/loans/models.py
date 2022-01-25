@@ -2,19 +2,26 @@ from django.db import models
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 
+from bitlipa.apps.users.models import User
 from .managers import LoanManager
 
 
 class Loan(models.Model):
-    class Types(models.TextChoices):
-        FLAT = 'FLAT', _('Flat loan')
-        PERCENTAGE = 'PERCENTAGE', _('Percentage loan')
-
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    name = models.CharField(verbose_name=_("name"), max_length=30, blank=True, null=True)
-    type = models.CharField(verbose_name=_("loan type"), max_length=10, choices=Types.choices, default=Types.FLAT, blank=False, null=False)
-    currency = models.CharField(verbose_name=_("currency"), max_length=30, blank=True, null=True)
-    amount = models.DecimalField(verbose_name=_("amount"), max_digits=19, decimal_places=4, blank=True, null=True)
+    beneficiary = models.ForeignKey(User, related_name='beneficiary_id', on_delete=models.DO_NOTHING, null=False)
+    currency = models.CharField(verbose_name=_("currency"), max_length=30, blank=False, null=False)
+    limit_amount = models.DecimalField(verbose_name=_("limit amount"),
+                                       max_digits=18,
+                                       decimal_places=2,
+                                       blank=False,
+                                       null=False,
+                                       default=0)
+    borrowed_amount = models.DecimalField(verbose_name=_("borrowed amount"),
+                                          max_digits=18,
+                                          decimal_places=2,
+                                          blank=False,
+                                          null=False,
+                                          default=0)
     description = models.TextField(verbose_name=_("description"), blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
@@ -23,11 +30,9 @@ class Loan(models.Model):
     objects = LoanManager()
 
     def __str__(self):
-        return self.amount
+        return self.borrowed_amount
 
     class Meta:
         db_table = "loans"
         ordering = ("created_at", "updated_at")
-        constraints = [
-            models.UniqueConstraint(fields=['name', 'type'], name='unique_loan')
-        ]
+        constraints = [models.UniqueConstraint(fields=['beneficiary_id'], name='unique_loan')]

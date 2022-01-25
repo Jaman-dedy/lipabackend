@@ -93,7 +93,8 @@ INSTALLED_APPS = [
     'bitlipa.apps.user_activity',
     'bitlipa.apps.enigma',
     'bitlipa.apps.user_settings',
-    'bitlipa.apps.phones'
+    'bitlipa.apps.phones',
+    'bitlipa.apps.loans',
 ]
 
 MIDDLEWARE = [
@@ -240,3 +241,4 @@ SMS_BROADCAST_TO_NUMBERS = []
 moneyed.add_currency(code='ETH', numeric='0001', name='Ethereum', countries=())
 moneyed.add_currency(code='BTC', numeric='0002', name='Bitcoin', countries=())
 moneyed.add_currency(code='TET', numeric='0003', name='Tether', countries=())
+moneyed.add_currency(code='USDT', numeric='0004', name='USDT', countries=())

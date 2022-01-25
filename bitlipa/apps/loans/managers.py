@@ -1,3 +1,4 @@
+import datetime
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -8,6 +9,10 @@ from bitlipa.resources import error_messages
 from bitlipa.utils.to_int import to_int
 from bitlipa.utils.to_decimal import to_decimal
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
+from bitlipa.apps.users.models import User
+from bitlipa.apps.global_configs.models import GlobalConfig
+from bitlipa.apps.fiat_wallets.models import FiatWallet
+from bitlipa.apps.users.serializers import BasicUserSerializer
 
 
 class LoanManager(models.Manager):
@@ -19,7 +24,9 @@ class LoanManager(models.Manager):
         for key in ['page', 'per_page']:
             table_fields.pop(key, None)  # remove fields not in the DB table
 
-        object_list = self.model.objects.filter(**remove_dict_none_values(table_fields)).order_by('-created_at')
+        object_list = self.model.objects.filter(**{
+            'deleted_at': None, **remove_dict_none_values(table_fields)}).order_by('-created_at')
+
         return {
             'data': Paginator(object_list, per_page).page(page).object_list,
             'meta': {
@@ -31,24 +38,34 @@ class LoanManager(models.Manager):
 
     def create_loan(self, **kwargs):
         (loan, errors) = (self.model(), {})
-        errors['name'] = error_messages.REQUIRED.format('loan name is ') if not kwargs.get('name') else None
-        errors['type'] = error_messages.REQUIRED.format('loan type is ') if not kwargs.get('type') else None
-        errors['amount'] = error_messages.REQUIRED.format('loan amount is ') if not kwargs.get('amount') else None
+        errors['beneficiary'] = error_messages.REQUIRED.format('loan beneficiary is ') if not kwargs.get('beneficiary_id') else None
+        errors['limit_amount'] = error_messages.REQUIRED.format('loan limit amount is ') if not kwargs.get('limit_amount') else None
 
-        if kwargs.get('type') and not (
-            str(kwargs.get('type')).upper() == str(self.model.Types.FLAT)
-            or str(kwargs.get('type')).upper() == str(self.model.Types.PERCENTAGE)
-        ):
-            errors['type'] = error_messages.INVALID_FEE_TYPE
+        beneficiary = BasicUserSerializer(User.objects.get(id=kwargs.get('beneficiary_id')), context={'include_wallets': True}).data
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
-        loan.name = kwargs.get('name')
-        loan.type = kwargs.get('type')
-        loan.currency = kwargs.get('currency')
-        loan.amount = kwargs.get('amount')
+        currency = kwargs.get('currency')
+        base_currency = GlobalConfig.objects.filter(name__iexact='base currency').first()
+        supported_currencies = GlobalConfig.objects.filter(name__iexact='supported currencies').first()
+
+        if str(currency).upper() not in list(map(str.upper, supported_currencies.data)):
+            currency = base_currency
+
+        loan.beneficiary_id = beneficiary.get('id')
+        loan.currency = currency
+        loan.limit_amount = kwargs.get('limit_amount')
+        loan.borrowed_amount = kwargs.get('borrowed_amount')
         loan.description = kwargs.get('description')
+
+        if len(beneficiary.get('fiat_wallets')):
+            fiat_wallet = FiatWallet()
+            fiat_wallet.name = 'Loan wallet'
+            fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{currency}-{len(beneficiary.get("fiat_wallets"))}'
+            fiat_wallet.currency = loan.currency
+            fiat_wallet.user_id = loan.beneficiary_id
+            fiat_wallet.save()
 
         loan.save(using=self._db)
         return loan
@@ -62,27 +79,27 @@ class LoanManager(models.Manager):
 
     def update(self, id=None, **kwargs):
         errors = {}
-        loan = self.model.objects.get(id=id)
-
-        if kwargs.get('type') and not (
-            str(kwargs.get('type')).upper() == str(self.model.Types.FLAT)
-            or str(kwargs.get('type')).upper() == str(self.model.Types.PERCENTAGE)
-        ):
-            errors['type'] = error_messages.INVALID_FEE_TYPE
+        loan = self.model.objects.get(id=id, deleted_at=None)
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
-        loan.name = kwargs.get('name', loan.name)
-        loan.type = kwargs.get('type', loan.type)
-        loan.currency = kwargs.get('currency', loan.currency)
-        loan.amount = kwargs.get('amount', loan.amount)
+        currency = kwargs.get('currency', loan.currency)
+        base_currency = GlobalConfig.objects.filter(name__iexact='base currency').first()
+        supported_currencies = GlobalConfig.objects.filter(name__iexact='supported currencies').first()
+
+        if str(currency).upper() not in list(map(str.upper, supported_currencies.data)):
+            currency = base_currency
+
+        loan.currency = currency
+        loan.limit_amount = kwargs.get('limit_amount', loan.limit_amount)
         loan.description = kwargs.get('description', loan.description)
 
         loan.save(using=self._db)
         return loan
 
     def remove(self, id=None):
-        loan = self.model.objects.get(id=id)
-        loan.delete()
+        loan = self.model.objects.get(id=id, deleted_at=None)
+        loan.deleted_at = datetime.datetime.now()
+        loan.save(using=self._db)
         return loan
