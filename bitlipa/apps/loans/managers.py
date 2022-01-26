@@ -37,13 +37,22 @@ class LoanManager(models.Manager):
         }
 
     def create_loan(self, **kwargs):
-        (loan, errors) = (self.model(), {})
-        errors['beneficiary'] = error_messages.REQUIRED.format('loan beneficiary is ') if not kwargs.get('beneficiary_id') else None
-        errors['limit_amount'] = error_messages.REQUIRED.format('loan limit amount is ') if not kwargs.get('limit_amount') else None
+        (loans, fiat_wallets, errors) = ([], [], {})
 
-        beneficiary = BasicUserSerializer(User.objects.get(id=kwargs.get('beneficiary_id')), context={'include_wallets': True}).data
+        if not isinstance(kwargs.get('beneficiaries'), list) or not len(kwargs.get('beneficiaries')):
+            errors['beneficiaries'] = error_messages.REQUIRED.format('loan beneficiaries are ')
+
+        if not isinstance(kwargs.get('limit_amount'), (int, float)):
+            errors['limit_amount'] = error_messages.REQUIRED.format('loan limit is ')
 
         if len(remove_dict_none_values(errors)) != 0:
+            raise ValidationError(str(errors))
+
+        users = User.objects.filter(id__in=kwargs.get('beneficiaries'))
+        beneficiaries = BasicUserSerializer(users, context={'include_wallets': True}, many=True).data
+
+        if not len(beneficiaries):
+            errors['beneficiaries'] = error_messages.NOT_FOUND.format('loan beneficiaries ')
             raise ValidationError(str(errors))
 
         currency = kwargs.get('currency')
@@ -53,22 +62,24 @@ class LoanManager(models.Manager):
         if str(currency).upper() not in list(map(str.upper, supported_currencies.data)):
             currency = base_currency
 
-        loan.beneficiary_id = beneficiary.get('id')
-        loan.currency = currency
-        loan.limit_amount = kwargs.get('limit_amount')
-        loan.borrowed_amount = kwargs.get('borrowed_amount')
-        loan.description = kwargs.get('description')
+        for beneficiary in beneficiaries:
+            loan = self.model()
+            loan.beneficiary_id = beneficiary.get('id')
+            loan.currency = currency
+            loan.limit_amount = kwargs.get('limit_amount')
+            loan.description = kwargs.get('description')
+            loans.append(loan)
 
-        if len(beneficiary.get('fiat_wallets')):
-            fiat_wallet = FiatWallet()
-            fiat_wallet.name = 'Loan wallet'
-            fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{currency}-{len(beneficiary.get("fiat_wallets"))}'
-            fiat_wallet.currency = loan.currency
-            fiat_wallet.user_id = loan.beneficiary_id
-            fiat_wallet.save()
+            if len(beneficiary.get('fiat_wallets')):
+                fiat_wallet = FiatWallet()
+                fiat_wallet.name = 'Loan wallet'
+                fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{currency}-{len(beneficiary.get("fiat_wallets"))}'
+                fiat_wallet.currency = loan.currency
+                fiat_wallet.user_id = loan.beneficiary_id
+                fiat_wallets.append(fiat_wallet)
 
-        loan.save(using=self._db)
-        return loan
+        FiatWallet.objects.bulk_create(fiat_wallets)
+        return self.model.objects.bulk_create(loans)
 
     def get_loan(self, **kwargs):
         try:
