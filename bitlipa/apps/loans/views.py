@@ -27,7 +27,7 @@ class LoanViewSet(viewsets.ViewSet):
     @db_transaction.atomic
     def create_loan(self, request):
         AuthUtil.is_auth(request, is_admin=True)
-        serializer = LoanSerializer(Loan.objects.create_loan(**request.data))
+        serializer = LoanSerializer(Loan.objects.create_loan(**request.data), many=True)
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def list_loans(self, request):
