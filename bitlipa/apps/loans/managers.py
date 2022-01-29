@@ -11,7 +11,7 @@ from bitlipa.utils.to_decimal import to_decimal
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.apps.users.models import User
 from bitlipa.apps.global_configs.models import GlobalConfig
-from bitlipa.apps.fiat_wallets.models import FiatWallet
+from bitlipa.apps.fiat_wallets.models import FiatWallet, FiatWalletTypes
 from bitlipa.apps.users.serializers import BasicUserSerializer
 
 
@@ -73,6 +73,7 @@ class LoanManager(models.Manager):
             if len(beneficiary.get('fiat_wallets')):
                 fiat_wallet = FiatWallet()
                 fiat_wallet.name = 'Loan wallet'
+                fiat_wallet.type = FiatWalletTypes.LOAN
                 fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{currency}-{len(beneficiary.get("fiat_wallets"))}'
                 fiat_wallet.currency = loan.currency
                 fiat_wallet.user_id = loan.beneficiary_id

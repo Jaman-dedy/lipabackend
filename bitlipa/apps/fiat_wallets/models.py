@@ -11,23 +11,33 @@ from bitlipa.apps.currency_exchange.models import CurrencyExchange
 from bitlipa.apps.global_configs.models import GlobalConfig
 
 
+class FiatWalletTypes(models.TextChoices):
+    PERSONAL = 'PERSONAL', _('Personal wallet')
+    LOAN = 'LOAN', _('Loan wallet')
+    SAVING = 'SAVING', _('Saving wallet')
+
+
 class FiatWallet(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     name = models.CharField(verbose_name=_("wallet name"), max_length=30, blank=True, null=True)
+    type = models.CharField(verbose_name=_("wallet type"),
+                            max_length=10,
+                            choices=FiatWalletTypes.choices,
+                            default=FiatWalletTypes.PERSONAL,
+                            blank=False,
+                            null=False)
     number = models.CharField(verbose_name=_("wallet number"), max_length=30, blank=True, null=True, unique=True,)
     currency = models.CharField(verbose_name=_("wallet currency"), max_length=30, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
     deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)
-    balance = MoneyField(
-        verbose_name=_("wallet balance"),
-        blank=False,
-        null=False,
-        default=0,
-        max_digits=18,
-        decimal_places=2,
-        currency_field_name='currency'
-    )
+    balance = MoneyField(verbose_name=_("wallet balance"),
+                         blank=False,
+                         null=False,
+                         default=0,
+                         max_digits=18,
+                         decimal_places=2,
+                         currency_field_name='currency')
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
 
     objects = FiatWalletManager()
