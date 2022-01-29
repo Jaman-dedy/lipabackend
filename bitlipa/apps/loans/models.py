@@ -3,12 +3,14 @@ from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 
 from bitlipa.apps.users.models import User
+from bitlipa.apps.fiat_wallets.models import FiatWallet
 from .managers import LoanManager
 
 
 class Loan(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     beneficiary = models.ForeignKey(User, related_name='beneficiary_id', on_delete=models.DO_NOTHING, null=False)
+    wallet = models.ForeignKey(FiatWallet, related_name='loan_wallet_id', on_delete=models.DO_NOTHING, null=True)
     currency = models.CharField(verbose_name=_("currency"), max_length=30, blank=False, null=False)
     limit_amount = models.DecimalField(verbose_name=_("limit amount"),
                                        max_digits=18,
