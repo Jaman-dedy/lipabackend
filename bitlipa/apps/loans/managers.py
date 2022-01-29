@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -63,21 +63,22 @@ class LoanManager(models.Manager):
             currency = base_currency
 
         for beneficiary in beneficiaries:
-            loan = self.model()
-            loan.beneficiary_id = beneficiary.get('id')
-            loan.currency = currency
-            loan.limit_amount = kwargs.get('limit_amount')
-            loan.description = kwargs.get('description')
-            loans.append(loan)
-
             if len(beneficiary.get('fiat_wallets')):
                 fiat_wallet = FiatWallet()
                 fiat_wallet.name = 'Loan wallet'
                 fiat_wallet.type = FiatWalletTypes.LOAN
                 fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{currency}-{len(beneficiary.get("fiat_wallets"))}'
-                fiat_wallet.currency = loan.currency
-                fiat_wallet.user_id = loan.beneficiary_id
+                fiat_wallet.currency = currency
+                fiat_wallet.user_id = beneficiary.get('id')
                 fiat_wallets.append(fiat_wallet)
+
+            loan = self.model()
+            loan.beneficiary_id = beneficiary.get('id')
+            loan.wallet = fiat_wallet
+            loan.currency = currency
+            loan.limit_amount = kwargs.get('limit_amount')
+            loan.description = kwargs.get('description')
+            loans.append(loan)
 
         FiatWallet.objects.bulk_create(fiat_wallets)
         return self.model.objects.bulk_create(loans)
@@ -96,12 +97,18 @@ class LoanManager(models.Manager):
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
+        today = datetime.now(timezone.utc)
         currency = kwargs.get('currency', loan.currency)
         base_currency = GlobalConfig.objects.filter(name__iexact='base currency').first()
         supported_currencies = GlobalConfig.objects.filter(name__iexact='supported currencies').first()
 
         if str(currency).upper() not in list(map(str.upper, supported_currencies.data)):
             currency = base_currency
+
+        # TODO: use global settings to check update frequency
+        if loan.wallet and today >= loan.updated_at and abs(today.day - loan.updated_at.day) > 0:
+            loan.wallet.balance = kwargs.get('limit_amount', loan.limit_amount)
+            loan.wallet.save()
 
         loan.currency = currency
         loan.limit_amount = kwargs.get('limit_amount', loan.limit_amount)
@@ -112,6 +119,6 @@ class LoanManager(models.Manager):
 
     def remove(self, id=None):
         loan = self.model.objects.get(id=id, deleted_at=None)
-        loan.deleted_at = datetime.datetime.now()
+        loan.deleted_at = datetime.now()
         loan.save(using=self._db)
         return loan
