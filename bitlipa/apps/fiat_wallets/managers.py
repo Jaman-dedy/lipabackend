@@ -14,6 +14,7 @@ class FiatWalletManager(models.Manager):
         if not kwargs.get('currency'):
             raise ValidationError(error_messages.REQUIRED.format('Wallet currency is '))
         fiat_wallet.name = kwargs.get('name')
+        fiat_wallet.type = kwargs.get('type')
         fiat_wallet.number = f'{user.phonenumber}-{kwargs.get("currency")}'
         fiat_wallet.currency = kwargs.get('currency')
         fiat_wallet.user = user
@@ -25,6 +26,7 @@ class FiatWalletManager(models.Manager):
         fiat_wallet = self.model.objects.get(id=id)
 
         fiat_wallet.name = kwargs.get('name') or fiat_wallet.name
+        fiat_wallet.type = kwargs.get('type') or fiat_wallet.type
         fiat_wallet.currency = kwargs.get('currency') or fiat_wallet.currency
         fiat_wallet.currency = kwargs.get('currency') or fiat_wallet.currency
 
