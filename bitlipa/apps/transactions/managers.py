@@ -20,7 +20,7 @@ from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.cybavo_checksum import CYBAVOChecksum
 from bitlipa.apps.crypto_wallets.models import CryptoWallet
-from bitlipa.apps.fiat_wallets.models import FiatWallet
+from bitlipa.apps.fiat_wallets.models import FiatWallet, FiatWalletTypes
 from bitlipa.apps.fees.models import Fee
 from bitlipa.apps.currency_exchange.models import CurrencyExchange
 
@@ -100,14 +100,15 @@ class TransactionManager(models.Manager):
             target_wallet = FiatWallet.objects.get(
                 models.Q(**{'id' if is_valid_uuid(kwargs.get('target_wallet')) else 'number': kwargs.get('target_wallet')}))
 
-        (fx_fee, fx_rate) = (0, 0)
-        internal_funds_transfer_fee = Fee.objects.get_fee(name__iexact="internal funds transfer")
+        (tx_fee, fx_fee, fx_rate) = (0, 0, 0)
+        if get_object_attr(source_wallet, 'type') != FiatWalletTypes.LOAN:
+            internal_funds_transfer_fee = Fee.objects.get_fee(name__iexact="internal funds transfer")
 
-        if str(internal_funds_transfer_fee.type).upper() == str(Fee.Types.FLAT):
-            tx_fee = internal_funds_transfer_fee.amount
+            if str(internal_funds_transfer_fee.type).upper() == str(Fee.Types.FLAT):
+                tx_fee = internal_funds_transfer_fee.amount
 
-        if str(internal_funds_transfer_fee.type).upper() == str(Fee.Types.PERCENTAGE):
-            tx_fee = to_decimal((internal_funds_transfer_fee.amount * to_decimal(kwargs.get('amount'))) / 100)
+            if str(internal_funds_transfer_fee.type).upper() == str(Fee.Types.PERCENTAGE):
+                tx_fee = to_decimal((internal_funds_transfer_fee.amount * to_decimal(kwargs.get('amount'))) / 100)
 
         tx_source_amount = to_decimal(kwargs.get('amount')) - tx_fee
         tx_source_total_amount = to_decimal(kwargs.get('amount'))
