@@ -9,6 +9,7 @@ from django_apscheduler import util
 
 from bitlipa.utils.logger import logger
 from bitlipa.apps.currency_exchange.tasks import update_exchange_rates
+from bitlipa.apps.loans.tasks import update_loan_wallets_balance
 
 
 # The `close_old_connections` decorator ensures that database connections, that have become
@@ -51,7 +52,7 @@ class Command(BaseCommand):
         scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
         scheduler.add_jobstore(DjangoJobStore(), "default")
 
-        # update_exchange_rates
+        # update exchange rates every one hour
         scheduler.add_job(
             update_exchange_rates,
             trigger=CronTrigger(hour="*/1"),
@@ -60,10 +61,19 @@ class Command(BaseCommand):
             replace_existing=True,
         )
 
-        # delete_old_job_executions
+        # update loan wallets balance everyday at 03:00 AM UTC
+        scheduler.add_job(
+            update_loan_wallets_balance,
+            trigger=CronTrigger(year="*", month="*", day="*", hour="3", minute="0", second="0"),
+            id="update_loan_wallets_balance",
+            max_instances=1,
+            replace_existing=True,
+        )
+
+        # delete old job executions every midnight on Monday, before start of the next work week.
         scheduler.add_job(
             delete_old_job_executions,
-            trigger=CronTrigger(day_of_week="mon", hour="00", minute="00"),  # Midnight on Monday, before start of the next work week.
+            trigger=CronTrigger(day_of_week="mon", hour="00", minute="00"),
             id="delete_old_job_executions",
             max_instances=1,
             replace_existing=True,
