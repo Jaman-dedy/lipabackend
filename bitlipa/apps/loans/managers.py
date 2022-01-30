@@ -106,7 +106,8 @@ class LoanManager(models.Manager):
             currency = base_currency
 
         # TODO: use global settings to check update frequency
-        if loan.wallet and today >= loan.updated_at and abs(today.day - loan.updated_at.day) > 0:
+        if loan.wallet and (loan.wallet.balance.amount == 0
+                            or (today >= loan.updated_at and abs(today.day - loan.updated_at.day) > 0)):
             loan.wallet.balance = kwargs.get('limit_amount', loan.limit_amount)
             loan.wallet.save()
 
