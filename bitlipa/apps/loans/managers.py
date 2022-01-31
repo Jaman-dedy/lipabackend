@@ -60,7 +60,7 @@ class LoanManager(models.Manager):
         supported_currencies = GlobalConfig.objects.filter(name__iexact='supported currencies').first()
 
         if str(currency).upper() not in list(map(str.upper, supported_currencies.data)):
-            currency = base_currency
+            currency = base_currency.data
 
         for beneficiary in beneficiaries:
             if len(beneficiary.get('fiat_wallets')):
@@ -103,7 +103,7 @@ class LoanManager(models.Manager):
         supported_currencies = GlobalConfig.objects.filter(name__iexact='supported currencies').first()
 
         if str(currency).upper() not in list(map(str.upper, supported_currencies.data)):
-            currency = base_currency
+            currency = base_currency.data
 
         # TODO: use global settings to check update frequency
         if loan.wallet and (loan.wallet.balance.amount == 0
