@@ -63,18 +63,17 @@ class LoanManager(models.Manager):
             currency = base_currency.data
 
         for beneficiary in beneficiaries:
+            (loan, fiat_wallet) = (self.model(), FiatWallet())
             if len(beneficiary.get('fiat_wallets')):
-                fiat_wallet = FiatWallet()
                 fiat_wallet.name = 'Loan wallet'
                 fiat_wallet.type = FiatWalletTypes.LOAN
                 fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{currency}-{len(beneficiary.get("fiat_wallets"))}'
                 fiat_wallet.currency = currency
                 fiat_wallet.user_id = beneficiary.get('id')
                 fiat_wallets.append(fiat_wallet)
+                loan.wallet = fiat_wallet
 
-            loan = self.model()
             loan.beneficiary_id = beneficiary.get('id')
-            loan.wallet = fiat_wallet
             loan.currency = currency
             loan.limit_amount = kwargs.get('limit_amount')
             loan.description = kwargs.get('description')
