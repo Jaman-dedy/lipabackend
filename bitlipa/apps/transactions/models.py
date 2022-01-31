@@ -28,8 +28,10 @@ class Transaction(models.Model):
 
     class ProcessingState(models.TextChoices):
         IN_POOL = '0', _('TXID in pool')
-        IN_CHAIN = '1', _('TXID in chain')
+        PROCESSING = '1', _('Processing')
         DONE = '2', _('Done')
+        IN_CHAIN = '3', _('TXID in chain')
+        FAILED = '5', _('Failed')
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     sender = models.ForeignKey(User, related_name='sender_id', verbose_name=_("sender"), on_delete=models.DO_NOTHING, null=True)

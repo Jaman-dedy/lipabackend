@@ -11,6 +11,7 @@ from bitlipa.apps.notifications.models import Notification
 
 @receiver(post_save, sender=Transaction)
 def send_notification(sender, instance, created, **kwargs):
+    event_type = events.GENERAL
     if not created:
         return
 
@@ -21,6 +22,8 @@ def send_notification(sender, instance, created, **kwargs):
         event_type = events.MONEY_RECEIVED
     if instance.type == constants.TOP_UP:
         event_type = events.TOP_UP
+    if instance.type == constants.WITHDRAW:
+        event_type = events.WITHDRAW
 
     if event_type and receiver and get_object_attr(receiver, 'firebase_token'):
         if sender and get_object_attr(sender, 'id') != receiver.id:

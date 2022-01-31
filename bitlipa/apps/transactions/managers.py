@@ -1,5 +1,6 @@
 import json
 import datetime
+from logging import raiseExceptions
 import time
 import random
 import uuid
@@ -217,33 +218,79 @@ class TransactionManager(models.Manager):
         return response.json()
 
     def beyonic_withdraw(self, **kwargs):
+        transaction = self.model()
+        REQUIRED_ERROR = error_messages.REQUIRED
         errors = {
-            'phonenumber': error_messages.REQUIRED.format('phonenumber is ') if not kwargs.get('phonenumber') else None,
-            'amount': error_messages.REQUIRED.format('amount is ') if not kwargs.get('amount') else None,
-            'currency': error_messages.REQUIRED.format('currency is ') if not kwargs.get('currency') else None,
-            'description': error_messages.REQUIRED.format('description is ') if not kwargs.get('description') else None,
-            'callback_url': error_messages.REQUIRED.format('callback_url is ') if not kwargs.get('callback_url') else None,
-            'first_name': error_messages.REQUIRED.format('first_name is ') if not kwargs.get('first_name') else None,
-            'last_name': error_messages.REQUIRED.format('last_name is ') if not kwargs.get('last_name') else None,
-            'payment_type': error_messages.REQUIRED.format('payment_type is ') if not kwargs.get('payment_type') else None,
-            'metadata': error_messages.REQUIRED.format('metadata is ') if not kwargs.get('metadata') else None
+            'phonenumber': REQUIRED_ERROR.format('phonenumber is ') if not kwargs.get('phonenumber') else None,
+            'amount': REQUIRED_ERROR.format('amount is ') if not kwargs.get('amount') else None,
+            'currency': REQUIRED_ERROR.format('currency is ') if not kwargs.get('currency') else None,
+            'description': REQUIRED_ERROR.format('description is ') if not kwargs.get('description') else None,
+            'callback_url': REQUIRED_ERROR.format('callback_url is ') if not kwargs.get('callback_url') else None,
+            'first_name': REQUIRED_ERROR.format('first_name is ') if not kwargs.get('first_name') else None,
+            'last_name': REQUIRED_ERROR.format('last_name is ') if not kwargs.get('last_name') else None,
+            'payment_type': REQUIRED_ERROR.format('payment_type is ') if not kwargs.get('payment_type') else None,
+            'metadata': REQUIRED_ERROR.format('metadata is ') if not kwargs.get('metadata') else None,
         }
+
+        metadata = kwargs.get('metadata') if isinstance(kwargs.get('metadata'), dict) else {}
+        errors['wallet_id'] = REQUIRED_ERROR.format('wallet id is ') \
+            if not (metadata.get('crypto_wallet_id') or metadata.get('fiat_wallet_id')) else None
+        errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if metadata.get('tx_fee') is None else None
+        errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if metadata.get('fx_fee') is None else None
+        errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if metadata.get('fx_rate') is None else None
+        errors['target_currency'] = REQUIRED_ERROR.format('target currency is ') if not metadata.get('target_currency') else None
+        errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if metadata.get('source_amount') is None else None
+        errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if metadata.get('source_total_amount') is None else None
+        errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if metadata.get('target_amount') is None else None
+
+        tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
+        tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
+
+        source_wallet = CryptoWallet.objects.get(id=tx_crypto_wallet_id) if tx_crypto_wallet_id \
+            else FiatWallet.objects.get(id=tx_fiat_wallet_id)
+
+        errors['amount'] = error_messages.INSUFFICIENT_FUNDS if \
+            source_wallet.balance.amount < to_decimal(metadata.get('source_total_amount')) else None
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
+        source_wallet.balance.amount -= to_decimal(metadata.get('source_total_amount'))
+
+        transaction.type = constants.WITHDRAW
+        transaction.wallet_id = kwargs.get('crypto_wallet_id')
+        transaction.transaction_id = uuid.uuid4().hex
+        transaction.source_currency = source_wallet.currency
+        transaction.target_currency = kwargs.get('currency')
+        transaction.fee = to_decimal(metadata.get('tx_fee'))
+        transaction.fx_fee = to_decimal(metadata.get('fx_fee'))
+        transaction.fx_rate = to_decimal(metadata.get('fx_rate'))
+        transaction.source_amount = to_decimal(kwargs.get('amount'))
+        transaction.source_total_amount = to_decimal(metadata.get('source_total_amount'))
+        transaction.target_amount = to_decimal(metadata.get('target_amount'))
+        transaction.source_address = get_object_attr(source_wallet, 'address', get_object_attr(source_wallet, 'number'))
+        transaction.target_address = kwargs.get('phonenumber')
+        transaction.description = kwargs.get('description')
+        transaction.state = self.model.ProcessingState.PROCESSING.label
+        transaction.sender = source_wallet.user
+
         payload = {
             'phonenumber': kwargs.get('phonenumber'),
-            'amount': kwargs.get('amount'),
+            'amount': metadata.get('target_amount'),
             'currency': kwargs.get('currency'),
             'description': kwargs.get('description'),
             'callback_url': kwargs.get('callback_url'),
             'first_name': kwargs.get('first_name'),
             'last_name': kwargs.get('last_name'),
             'payment_type': kwargs.get('payment_type'),
-            'send_instructions': kwargs.get('send_instructions')
-        }
+            'send_instructions': kwargs.get('send_instructions'),
+            "metadata": {
+                "tx_crypto_wallet_id": str(tx_crypto_wallet_id),
+                "fiat_wallet_id": str(tx_fiat_wallet_id),
+                "tx_id": str(transaction.id)
+            }
 
+        }
         payload = json.dumps(payload)
         response = http_request(
             url=f'{settings.BEYONIC_API}/payments',
@@ -257,7 +304,47 @@ class TransactionManager(models.Manager):
 
         if not status.is_success(response.status_code):
             raise ValidationError(str(response.json()))
+
+        source_wallet.save()
+        transaction.save(using=self._db)
+
         return response.json()
+
+    def create_or_update_withdraw_transaction(self, **kwargs):
+        REQUIRED_ERROR = error_messages.REQUIRED
+        errors = {}
+        data = kwargs.get('data') if isinstance(kwargs.get('data'), dict) else {}
+        metadata = data.get('metadata') if isinstance(data.get('metadata'), dict) else {}
+
+        errors['data'] = REQUIRED_ERROR.format('data is ') if not kwargs.get('data') or not isinstance(kwargs.get('data'), dict) else None
+        errors['currency'] = REQUIRED_ERROR.format('currency is ') if not data.get('currency') else None
+        errors['event'] = REQUIRED_ERROR.format('event is ') if not kwargs.get('event') else None
+        errors['metadata'] = REQUIRED_ERROR.format('metadata is ') if not data.get('metadata') else None
+        errors['id'] = REQUIRED_ERROR.format('id is ') if not data.get('id') else None
+        errors['wallet_id'] = REQUIRED_ERROR.format('wallet id is ') \
+            if not (metadata.get('crypto_wallet_id') or metadata.get('fiat_wallet_id')) else None
+
+        if len(remove_dict_none_values(errors)) != 0:
+            raise ValidationError(str(errors))
+
+        tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
+        tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
+        tx_id = metadata.get('tx_id')
+
+        transaction = self.model.objects.get(id=tx_id)
+
+        user_wallet = CryptoWallet.objects.get(id=tx_crypto_wallet_id) if tx_crypto_wallet_id \
+            else FiatWallet.objects.get(id=tx_fiat_wallet_id)
+
+        if data.get("state") == "success" or data.get("state") == "successful" or data.get("status") == "success" or data.get("status") == "successful":
+            transaction.state = self.model.ProcessingState.DONE.label
+        else:
+            self.model.ProcessingState.FAILED.label
+            user_wallet.balance.amount += transaction.source_total_amount.amount
+            user_wallet.save()
+
+        transaction.save(using=self._db)
+        return transaction
 
     def create_or_update_topup_transaction(self, **kwargs):
         REQUIRED_ERROR = error_messages.REQUIRED
