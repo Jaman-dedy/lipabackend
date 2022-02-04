@@ -325,6 +325,7 @@ class TransactionManager(models.Manager):
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
+        tx_state = data.get("state") or data.get("status")
         tx_id = metadata.get('tx_id')
         tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
         tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
@@ -332,10 +333,13 @@ class TransactionManager(models.Manager):
         user_wallet = CryptoWallet.objects.get(id=tx_crypto_wallet_id) if tx_crypto_wallet_id \
             else FiatWallet.objects.get(id=tx_fiat_wallet_id)
 
-        if data.get("state") == "success" or data.get("state") == "successful" or data.get("status") == "success" or data.get("status") == "successful":
+        if transaction.state in [self.model.ProcessingState.DONE.label, self.model.ProcessingState.FAILED.label]:
+            raise IntegrityError(f'this transaction {tx_id}')
+
+        if tx_state in ["processed", "success", "successful"]:
             transaction.state = self.model.ProcessingState.DONE.label
-        else:
-            self.model.ProcessingState.FAILED.label
+        elif tx_state in ["rejected", "processed_with_errors", "cancelled"]:
+            transaction.state = self.model.ProcessingState.FAILED.label
             user_wallet.balance.amount += transaction.source_total_amount.amount
             user_wallet.save()
 
@@ -366,6 +370,7 @@ class TransactionManager(models.Manager):
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
+        tx_state = data.get("state") or data.get("status")
         tx_id = data.get('id')
         tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
         tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
@@ -404,7 +409,7 @@ class TransactionManager(models.Manager):
         transaction.target_address = get_object_attr(user_wallet, 'address') or get_object_attr(user_wallet, 'number')
         transaction.receiver = user_wallet.user
 
-        if(data.get("status") == "success" or data.get("status") == "successful"):
+        if tx_state in ["success", "successful"]:
             user_wallet.balance.amount += target_amount
             user_wallet.save()
             transaction.save(using=self._db)
