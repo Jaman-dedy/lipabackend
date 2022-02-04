@@ -343,7 +343,10 @@ class TransactionManager(models.Manager):
             user_wallet.balance.amount += transaction.source_total_amount.amount
             user_wallet.save()
 
-        transaction.save(using=self._db)
+        if transaction.state in [self.model.ProcessingState.DONE.label, self.model.ProcessingState.FAILED.label]:
+            transaction.receiver = transaction.sender
+            transaction.save(using=self._db)
+
         return transaction
 
     def create_topup_transaction(self, **kwargs):
