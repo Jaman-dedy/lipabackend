@@ -1,6 +1,5 @@
 import json
 import datetime
-from logging import raiseExceptions
 import time
 import random
 import uuid
@@ -261,7 +260,7 @@ class TransactionManager(models.Manager):
         transaction.wallet_id = kwargs.get('crypto_wallet_id')
         transaction.transaction_id = uuid.uuid4().hex
         transaction.source_currency = source_wallet.currency
-        transaction.target_currency = kwargs.get('currency')
+        transaction.target_currency = metadata.get('target_currency')
         transaction.fee = to_decimal(metadata.get('tx_fee'))
         transaction.fx_fee = to_decimal(metadata.get('fx_fee'))
         transaction.fx_rate = to_decimal(metadata.get('fx_rate'))
@@ -285,17 +284,16 @@ class TransactionManager(models.Manager):
             'payment_type': kwargs.get('payment_type'),
             'send_instructions': kwargs.get('send_instructions'),
             "metadata": {
-                "tx_crypto_wallet_id": str(tx_crypto_wallet_id),
-                "fiat_wallet_id": str(tx_fiat_wallet_id),
-                "tx_id": str(transaction.id)
+                "tx_id": str(transaction.id),
+                **({"crypto_wallet_id": tx_crypto_wallet_id} if tx_crypto_wallet_id else {}),
+                **({"fiat_wallet_id": tx_fiat_wallet_id} if tx_fiat_wallet_id else {}),
             }
 
         }
-        payload = json.dumps(payload)
         response = http_request(
             url=f'{settings.BEYONIC_API}/payments',
             method='POST',
-            data=payload,
+            data=json.dumps(payload),
             headers={
                 'Authorization': f'Token {settings.BEYONIC_API_TOKEN}',
                 'Content-Type': 'application/json'
@@ -310,7 +308,7 @@ class TransactionManager(models.Manager):
 
         return response.json()
 
-    def create_or_update_withdraw_transaction(self, **kwargs):
+    def update_withdraw_transaction(self, **kwargs):
         REQUIRED_ERROR = error_messages.REQUIRED
         errors = {}
         data = kwargs.get('data') if isinstance(kwargs.get('data'), dict) else {}
@@ -327,12 +325,10 @@ class TransactionManager(models.Manager):
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
+        tx_id = metadata.get('tx_id')
         tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
         tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
-        tx_id = metadata.get('tx_id')
-
         transaction = self.model.objects.get(id=tx_id)
-
         user_wallet = CryptoWallet.objects.get(id=tx_crypto_wallet_id) if tx_crypto_wallet_id \
             else FiatWallet.objects.get(id=tx_fiat_wallet_id)
 
@@ -346,7 +342,7 @@ class TransactionManager(models.Manager):
         transaction.save(using=self._db)
         return transaction
 
-    def create_or_update_topup_transaction(self, **kwargs):
+    def create_topup_transaction(self, **kwargs):
         REQUIRED_ERROR = error_messages.REQUIRED
         errors = {}
         data = kwargs.get('data') if isinstance(kwargs.get('data'), dict) else {}
@@ -370,9 +366,9 @@ class TransactionManager(models.Manager):
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
+        tx_id = data.get('id')
         tx_crypto_wallet_id = metadata.get("crypto_wallet_id")
         tx_fiat_wallet_id = metadata.get("fiat_wallet_id")
-        tx_id = data.get('id')
         tx_fee = to_decimal(metadata.get('tx_fee'))
         fx_fee = to_decimal(metadata.get('fx_fee'))
         fx_rate = to_decimal(metadata.get('fx_rate'))

@@ -67,16 +67,17 @@ class TransactionViewSet(viewsets.ViewSet):
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
     @action(methods=['post'], detail=False, url_path='topup/callback', url_name='topup_transaction')
-    def create_or_update_topup_transaction(self, request):
+    def create_topup_transaction(self, request):
         # TODO: Remove logs
         logger(request.data, 'info')
-        TransactionSerializer(Transaction.objects.create_or_update_topup_transaction(**request.data))
+        TransactionSerializer(Transaction.objects.create_topup_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
+
     @action(methods=['post'], detail=False, url_path='withdraw/callback', url_name='withdraw_transaction')
-    def create_or_update_withdraw_transaction(self, request):
+    def update_withdraw_transaction(self, request):
         # TODO: Remove logs
         logger(request.data, 'info')
-        TransactionSerializer(Transaction.objects.create_or_update_withdraw_transaction(**request.data))
+        TransactionSerializer(Transaction.objects.update_withdraw_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
     def list_transactions(self, request):
