@@ -1,18 +1,20 @@
+from contextlib import suppress
 from datetime import datetime
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.db import models
 
 
-from bitlipa.resources import constants
+from bitlipa.resources import constants, events
 from bitlipa.resources import error_messages
 from bitlipa.utils.to_int import to_int
 from bitlipa.utils.to_decimal import to_decimal
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.apps.users.models import User
+from bitlipa.apps.users.serializers import BasicUserSerializer
 from bitlipa.apps.global_configs.models import GlobalConfig
 from bitlipa.apps.fiat_wallets.models import FiatWallet, FiatWalletTypes
-from bitlipa.apps.users.serializers import BasicUserSerializer
+from bitlipa.apps.notifications.models import Notification
 
 
 class LoanManager(models.Manager):
@@ -79,8 +81,24 @@ class LoanManager(models.Manager):
             loan.description = kwargs.get('description')
             loans.append(loan)
 
+        notification_receivers = list(map(lambda loan: loan.beneficiary.email, loans))
+        event_type = events.TOP_UP
+        title = 'Loan wallet created'
+        body = kwargs.get('description') or 'Your loan wallet has been created'
+
+        notification = {
+            'delivery_option': 'in_app',
+            'emails': notification_receivers,
+            'title': title,
+            'content': {'body': body, 'event_type': event_type, 'image': '', 'payload': {}},
+            'image_url': '',
+            'save': False,
+        }
         FiatWallet.objects.bulk_create(fiat_wallets)
-        return self.model.objects.bulk_create(loans)
+        loans = self.model.objects.bulk_create(loans)
+        with suppress(Exception):
+            Notification.objects.create_notification(user=None, **notification)
+        return loans
 
     def get_loan(self, **kwargs):
         try:

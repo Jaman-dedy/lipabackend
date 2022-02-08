@@ -28,7 +28,8 @@ class NotificationViewSet(viewsets.ViewSet):
 
     def create_notification(self, request):
         AuthUtil.is_auth(request)
-        serializer = NotificationSerializer(Notification.objects.create_notification(user=request.user, **request.data))
+        serializer = NotificationSerializer(
+            Notification.objects.create_notification(user=request.user, **request.data), many=True)
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def list_notifications(self, request):

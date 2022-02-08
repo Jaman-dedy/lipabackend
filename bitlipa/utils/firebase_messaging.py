@@ -2,8 +2,9 @@ import datetime
 import json
 import firebase_admin
 from firebase_admin import credentials, messaging
-
 from django.conf import settings
+
+from bitlipa.resources.events import GENERAL
 
 
 service_account = eval(settings.FIREBASE_SERVICE_ACCOUNT)
@@ -14,7 +15,7 @@ app = firebase_admin.initialize_app(cred)
 def send_notification(tokens, event_type, data):
     notification_data = {
         **data,
-        'event_type': event_type,
+        'event_type': event_type or GENERAL,
         'title': data.get('title') or data.get('event_type'),
         'body': data.get('body') or '',
         'icon': data.get('icon') or '@mipmap/ic_launcher',
