@@ -11,10 +11,10 @@ from bitlipa.apps.notifications.models import Notification
 
 @receiver(post_save, sender=Transaction)
 def send_notification(sender, instance, created, **kwargs):
-    sender = get_object_attr(instance, 'sender')
-    receiver = get_object_attr(instance, 'receiver')
+    notification_sender = get_object_attr(instance, 'sender')
+    notification_receiver = get_object_attr(instance, 'receiver')
 
-    if not (receiver and get_object_attr(receiver, 'firebase_token')):
+    if not (notification_receiver and get_object_attr(notification_receiver, 'firebase_token')):
         return
 
     event_type = events.MONEY_RECEIVED
@@ -23,34 +23,34 @@ def send_notification(sender, instance, created, **kwargs):
     image_url = ''
 
     if instance.type == constants.INTERNAL_USERS_TRANSACTION:
-        sender_name = sender.first_name or sender.middle_name or sender.last_name or sender.phonenumber or sender.email
+        sender_name = notification_sender.first_name or notification_sender.middle_name or \
+            notification_sender.last_name or notification_sender.phonenumber or notification_sender.email
         event_type = events.MONEY_RECEIVED
-        body = f'{sender_name} sent you {format_number(instance.target_amount.amount)} {instance.target_currency}'
-        image_url = get_object_attr(sender, 'picture_url', '')
+        body = f'{sender_name} sent you {instance.target_currency} {format_number(instance.target_amount.amount)}'
+        image_url = get_object_attr(notification_sender, 'picture_url', '')
 
     if instance.type == constants.TOP_UP:
         event_type = events.TOP_UP
-        body = f'You received {format_number(instance.target_amount.amount)} {instance.target_currency}'
+        body = f'You received {instance.target_currency} {format_number(instance.target_amount.amount)}'
 
     if instance.type == constants.WITHDRAW:
         event_type = events.WITHDRAW
         title = 'Successful withdrawal' if instance.state == Transaction.ProcessingState.DONE.label else 'Withdrawal failed'
-        body = f'You have successfully withdrawn {format_number(instance.target_amount.amount)} {instance.target_currency}' \
+        body = f'You have successfully withdrawn {instance.target_currency} {format_number(instance.target_amount.amount)}' \
             if instance.state == Transaction.ProcessingState.DONE.label \
-            else f'Withdrawal of {format_number(instance.target_amount.amount)} {instance.target_currency} failed'
+            else f'Withdrawal of {instance.target_currency} {format_number(instance.target_amount.amount)} failed'
 
     notification = {
         'delivery_option': 'in_app',
-        'emails': [receiver.email],
+        'emails': [notification_receiver.email],
         'title': title,
         'content': {
             'body': body,
             'event_type': event_type,
             'image': image_url,
             'payload': {},
-            'save': True
         },
-        'recipient_id': receiver.id,
-        'image_url': image_url
+        'image_url': image_url,
+        'save': True,
     }
-    return Notification.objects.create_notification(user=sender, **notification)
+    return Notification.objects.create_notification(user=notification_sender, **notification)
