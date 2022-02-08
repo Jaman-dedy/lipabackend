@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -96,7 +96,6 @@ class LoanManager(models.Manager):
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
-        today = datetime.now(timezone.utc)
         currency = kwargs.get('currency', loan.currency)
         base_currency = GlobalConfig.objects.filter(name__iexact='base currency').first()
         supported_currencies = GlobalConfig.objects.filter(name__iexact='supported currencies').first()
@@ -104,9 +103,7 @@ class LoanManager(models.Manager):
         if str(currency).upper() not in list(map(str.upper, supported_currencies.data)):
             currency = base_currency.data
 
-        # TODO: use global settings to check update frequency
-        if loan.wallet and (loan.wallet.balance.amount == 0
-                            or (today >= loan.updated_at and abs(today.day - loan.updated_at.day) > 0)):
+        if loan.wallet:
             loan.wallet.balance = kwargs.get('limit_amount', loan.limit_amount)
             loan.wallet.save()
 
