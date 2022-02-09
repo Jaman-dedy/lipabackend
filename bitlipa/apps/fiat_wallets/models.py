@@ -11,19 +11,18 @@ from bitlipa.apps.currency_exchange.models import CurrencyExchange
 from bitlipa.apps.global_configs.models import GlobalConfig
 
 
-class FiatWalletTypes(models.TextChoices):
-    PERSONAL = 'PERSONAL', _('Personal wallet')
-    LOAN = 'LOAN', _('Loan wallet')
-    SAVING = 'SAVING', _('Saving wallet')
-
-
 class FiatWallet(models.Model):
+    class Types(models.TextChoices):
+        PERSONAL = 'PERSONAL', _('Personal wallet')
+        LOAN = 'LOAN', _('Loan wallet')
+        SAVING = 'SAVING', _('Saving wallet')
+
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     name = models.CharField(verbose_name=_("wallet name"), max_length=30, blank=True, null=True)
     type = models.CharField(verbose_name=_("wallet type"),
                             max_length=10,
-                            choices=FiatWalletTypes.choices,
-                            default=FiatWalletTypes.PERSONAL,
+                            choices=Types.choices,
+                            default=Types.PERSONAL,
                             blank=False,
                             null=False)
     number = models.CharField(verbose_name=_("wallet number"), max_length=30, blank=True, null=True, unique=True,)
@@ -94,7 +93,8 @@ class FiatWallet(models.Model):
             currency = base_currency.data
 
         if currency:
-            wallet = self.objects.create_wallet(user=user, **{'name': 'Personal', 'currency': currency})
+            wallet = self.objects.create_wallet(user=user, **{
+                'name': 'Personal', 'currency': currency, 'type': self.Types.PERSONAL})
 
         return wallet
 
