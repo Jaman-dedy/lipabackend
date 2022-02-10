@@ -10,7 +10,7 @@ from bitlipa.apps.notifications.models import Notification
 
 
 @receiver(post_save, sender=Transaction)
-def send_notification(sender, instance, created, **kwargs):
+def post_save_handler(sender, instance, created, **kwargs):
     notification_sender = get_object_attr(instance, 'sender')
     notification_receiver = get_object_attr(instance, 'receiver')
 

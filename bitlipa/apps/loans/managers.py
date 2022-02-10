@@ -66,18 +66,18 @@ class LoanManager(models.Manager):
 
         for beneficiary in beneficiaries:
             (loan, fiat_wallet) = (self.model(), FiatWallet())
-            if len(beneficiary.get('fiat_wallets')):
-                fiat_wallet.name = 'Loan wallet'
-                fiat_wallet.type = FiatWallet.Types.LOAN
-                fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{currency}-{len(beneficiary.get("fiat_wallets"))}'
-                fiat_wallet.currency = currency
-                fiat_wallet.user_id = beneficiary.get('id')
-                fiat_wallets.append(fiat_wallet)
-                loan.wallet = fiat_wallet
+            fiat_wallet.name = 'Loan wallet'
+            fiat_wallet.type = FiatWallet.Types.LOAN
+            fiat_wallet.number = f'{beneficiary.get("phonenumber")}-{len(beneficiary.get("fiat_wallets")) + 1}'
+            fiat_wallet.currency = currency
+            fiat_wallet.user_id = beneficiary.get('id')
+            fiat_wallets.append(fiat_wallet)
 
+            loan.wallet = fiat_wallet
             loan.beneficiary_id = beneficiary.get('id')
             loan.currency = currency
             loan.limit_amount = kwargs.get('limit_amount')
+            loan.borrowed_amount = kwargs.get('borrowed_amount')
             loan.description = kwargs.get('description')
             loans.append(loan)
 
@@ -124,9 +124,20 @@ class LoanManager(models.Manager):
         if loan.wallet:
             loan.wallet.balance = kwargs.get('limit_amount', loan.limit_amount)
             loan.wallet.save()
+        else:
+            fiat_wallet = FiatWallet()
+            fiat_wallet.name = 'Loan wallet'
+            fiat_wallet.type = FiatWallet.Types.LOAN
+            fiat_wallet.balance = kwargs.get('limit_amount', loan.limit_amount)
+            fiat_wallet.number = f'{loan.beneficiary.phonenumber}-{len(loan.beneficiary.get("fiat_wallets")) + 1}'
+            fiat_wallet.currency = currency
+            fiat_wallet.user_id = loan.beneficiary.get('id')
+            fiat_wallet.save()
+            loan.wallet = fiat_wallet
 
         loan.currency = currency
         loan.limit_amount = kwargs.get('limit_amount', loan.limit_amount)
+        loan.borrowed_amount = kwargs.get('borrowed_amount', loan.borrowed_amount)
         loan.description = kwargs.get('description', loan.description)
 
         loan.save(using=self._db)
