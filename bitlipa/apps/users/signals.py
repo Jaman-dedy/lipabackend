@@ -5,14 +5,14 @@ from django.dispatch import receiver
 
 
 @receiver(post_save, sender=User)
-def create_activity(sender, instance, created, **kwargs):
+def post_save_handler(sender, instance, created, **kwargs):
     if created:
         try:
             creator = User.objects.get(id=instance.creator_id)
             description = f'{creator.first_name} {creator.last_name} created {instance.first_name} {instance.last_name}'
-            user = UserActivity(title='account creation', description=description, user_id=instance.creator_id)
+            activity = UserActivity(title='account creation', description=description, user_id=instance.creator_id)
         except User.DoesNotExist:
             description = f'{instance.first_name} {instance.last_name} created an account'
-            user = UserActivity(title='account creation', description=description, user_id=instance.id)
+            activity = UserActivity(title='account creation', description=description, user_id=instance.id)
 
-        user.save()
+        activity.save()
