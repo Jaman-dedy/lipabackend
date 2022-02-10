@@ -13,9 +13,12 @@ from bitlipa.utils.split_camel_case_words import split_camel_case_words
 
 
 def get_http_error_message_and_code(exc):
-    (error, error_message) = (None, str(get_object_attr(exc, "message", exc)))
+    error = None
+    error_message = str(get_object_attr(exc, "message", exc) % get_object_attr(exc, "params")) \
+        if get_object_attr(exc, "params") else str(get_object_attr(exc, "message", exc))
+
     try:
-        (error, error_message) = (eval(error_message), error_messages.BAD_REQUEST)
+        error, error_message = eval(error_message), error_messages.BAD_REQUEST
         if isinstance(error, dict):
             err_msg = ''
             for k in error:
