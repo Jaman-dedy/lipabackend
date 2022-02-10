@@ -45,6 +45,6 @@ def post_save_handler(sender, instance, created, **kwargs):
             'title': title,
             'content': {'body': body, 'event_type': event_type, 'image': '', 'payload': {}},
             'image_url': '',
-            'save': False,
+            'save': True,
         }
         Notification.objects.create_notification(user=None, **notification)
