@@ -3,6 +3,7 @@ from django.dispatch import receiver
 
 
 from bitlipa.resources import events
+from bitlipa.utils.to_decimal import to_decimal
 from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.apps.loans.models import Loan
 from bitlipa.apps.notifications.models import Notification
@@ -29,11 +30,11 @@ def post_save_handler(sender, instance, created, **kwargs):
         title = 'Loan wallet created'
         body = 'Your loan wallet has been created.'
 
-    if previous_instance.limit_amount != instance.limit_amount:
+    if to_decimal(previous_instance.limit_amount) != to_decimal(instance.limit_amount):
         title = 'Loan wallet updated'
         body = f'Your loan wallet has been updated. Your loan limit is {instance.currency} {(instance.limit_amount)}'
 
-    if previous_instance.borrowed_amount and instance.borrowed_amount == 0:
+    if to_decimal(previous_instance.borrowed_amount) and to_decimal(instance.borrowed_amount) == 0:
         title = 'Loan settled'
         body = f'Your loan of {previous_instance.currency} {(previous_instance.borrowed_amount)} has been settled.'
 
