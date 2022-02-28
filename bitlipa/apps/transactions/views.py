@@ -95,6 +95,7 @@ class TransactionViewSet(viewsets.ViewSet):
             'serial': request.GET.get('serial'),
             'source_address': request.GET.get('source_address'),
             'target_address': request.GET.get('target_address'),
+            'user_id': request.GET.get('user_id'),
         }
 
         result = Transaction.objects.list(user=request.user, **kwargs)
