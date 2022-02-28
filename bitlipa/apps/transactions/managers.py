@@ -31,10 +31,18 @@ class TransactionManager(models.Manager):
         page = to_int(kwargs.get('page'), 1)
         per_page = to_int(kwargs.get('per_page'), constants.DB_ITEMS_LIMIT)
 
-        for key in ['page', 'per_page']:
+        for key in ['page', 'per_page', 'user_id']:
             table_fields.pop(key, None)  # remove fields not in the DB table
 
+        if table_fields.get('source_address') and table_fields.get('source_address') == table_fields.get('target_address'):
+            query = models.Q(source_address=kwargs.get('source_address')) | models.Q(target_address=kwargs.get('target_address'))
+            table_fields.pop('source_address', None)
+            table_fields.pop('target_address', None)
+
         query = models.Q(**{'deleted_at': None, **remove_dict_none_values(table_fields)})
+
+        if get_object_attr(user, "is_admin") and is_valid_uuid(kwargs.get('user_id')):
+            query = query & (models.Q(sender_id=kwargs.get('user_id')) | models.Q(receiver_id=kwargs.get('user_id')))
 
         if not get_object_attr(user, "is_admin"):
             query = query & (models.Q(sender_id=user.id) | models.Q(receiver_id=user.id))
