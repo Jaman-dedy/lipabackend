@@ -1,3 +1,4 @@
+import urllib.parse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.http import HttpResponse
@@ -93,8 +94,8 @@ class TransactionViewSet(viewsets.ViewSet):
             'state__iexact': request.GET.get('state'),
             'transaction_id': request.GET.get('transaction_id'),
             'serial': request.GET.get('serial'),
-            'source_address': request.GET.get('source_address'),
-            'target_address': request.GET.get('target_address'),
+            'source_address': urllib.parse.unquote(request.GET.get('source_address')) if request.GET.get('source_address') else None,
+            'target_address': urllib.parse.unquote(request.GET.get('target_address')) if request.GET.get('target_address') else None,
             'user_id': request.GET.get('user_id'),
         }
 
@@ -114,8 +115,8 @@ class TransactionViewSet(viewsets.ViewSet):
             'state__iexact': request.GET.get('state'),
             'transaction_id': request.GET.get('transaction_id'),
             'serial': request.GET.get('serial'),
-            'source_address': request.GET.get('source_address'),
-            'target_address': request.GET.get('target_address'),
+            'source_address': urllib.parse.unquote(request.GET.get('source_address')) if request.GET.get('source_address') else None,
+            'target_address': urllib.parse.unquote(request.GET.get('target_address')) if request.GET.get('target_address') else None,
         }
 
         result = Transaction.objects.list_last_receivers(user=request.user, **kwargs)
