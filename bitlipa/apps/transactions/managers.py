@@ -201,9 +201,9 @@ class TransactionManager(models.Manager):
 
         payload = {
             'phonenumber': kwargs.get('phonenumber'),
-            'amount': kwargs.get('amount'),
-            'currency': kwargs.get('currency'),
-            'description': kwargs.get('description'),
+            'amount': metadata.get('source_total_amount'),
+            'currency': metadata.get('source_currency'),
+            'description': metadata.get('description'),
             'callback_url': kwargs.get('callback_url'),
             'metadata': kwargs.get('metadata', {}),
             'send_instructions': kwargs.get('send_instructions')
