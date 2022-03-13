@@ -1,8 +1,38 @@
 #!/bin/bash
 
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --env=*)
+    env="${1#*=}"
+    ;;
+  --port=*)
+    port="${1#*=}"
+    ;;
+  *)
+    printf "***************************\n"
+    printf "* run.sh: Invalid argument (${1}).\n"
+    printf "***************************\n"
+    exit 1
+    ;;
+  esac
+  shift
+done
+
+env=${env-"dev"}
+
+if [[ -f "$(dirname "$0")/../.env.$env" ]]; then
+  cat $(dirname "$0")/../.env.$env >$(dirname "$0")/../.env
+fi
+
 python3 manage.py migrate
 python3 manage.py loaddata ./bitlipa/fixtures/*.json
 python3 manage.py runapscheduler &
 python3 manage.py collectstatic --noinput
-python3 manage.py runserver ${1:-"0.0.0.0:8000"}
+
+if [[ $env == "prod" ]] || [[ $env == "production" ]]; then
+  gunicorn bitlipa.wsgi --bind 0.0.0.0:${port:-8000} --preload --log-file -
+else
+  python3 manage.py runserver 0.0.0.0:${port:-8000}
+fi
+
 python3 manage.py stopapscheduler

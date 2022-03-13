@@ -1,6 +1,15 @@
-FROM python:3
+FROM python:3.7-slim-buster
+
+ENV PYTHONDONTWRITEBYTECODE=1
+
 ENV PYTHONUNBUFFERED=1
-WORKDIR /usr/src/app
+
+WORKDIR  /usr/src/app
+
 COPY . .
-RUN pip install -r requirements.txt
-CMD [ "./scripts/run.sh" ]
+
+RUN pip3 install -r requirements.txt
+
+EXPOSE 8000
+
+CMD [ "./scripts/run.sh", "--env=prod" ]
