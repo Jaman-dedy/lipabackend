@@ -56,7 +56,7 @@ class AuthManager:
             return user
 
         otp_obj = OTP.objects.save(email=email, phonenumber=kwargs.get('phonenumber'), digits=4)
-        message = f'<#> Your {settings.APP_NAME} verification code is: {otp_obj.otp}\n {settings.MOBILE_APP_HASH}'
+        message = f'<#> Your {settings.APP_NAME.capitalize()} verification code is: {otp_obj.otp}\n {settings.MOBILE_APP_HASH}'
         send_sms(otp_obj.phonenumber, message=message)
         return user
     # def save_or_verify_phonenumber(self, id=None, email=None, **kwargs):
@@ -89,7 +89,7 @@ class AuthManager:
     #             return user
 
     #     otp_obj = OTP.objects.save(email=email, phonenumber=kwargs.get('phonenumber'), digits=4)
-    #     message = f'<#> Your {settings.APP_NAME} verification code is: {otp_obj.otp}\n {settings.MOBILE_APP_HASH}'
+    #     message = f'<#> Your {settings.APP_NAME.capitalize()} verification code is: {otp_obj.otp}\n {settings.MOBILE_APP_HASH}'
     #     send_sms(otp_obj.phonenumber, message=message)
     #     if kwargs.get('secondary'):
     #         return phone

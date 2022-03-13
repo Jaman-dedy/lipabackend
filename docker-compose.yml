@@ -1,25 +1,52 @@
-version: "3.8"
+version: "3.7"
 
 services:
-  bitlipa-api:
-    build: .
-    container_name: bitlipa-api
-    command: ./scripts/run.sh
+  db:
+    container_name: postgres
+    image: postgres:13
     volumes:
-      - .:/usr/src/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgresdb
-  postgresdb:
-    image: postgres:13-alpine
-    volumes:
-      - postgres_volume:/var/opt/postgres
+      - $HOME/docker/volumes/postgres:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=12345
-      - POSTGRES_DB=bitlipa
+      POSTGRES_PASSWORD: "12345"
+      POSTGRES_DB: "bitlipa"
+    restart: unless-stopped
     ports:
       - 5432:5432
-volumes:
-  postgres_volume:
+  dev:
+    container_name: bitlipa-dev-api
+    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-dev-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: sh -c "./scripts/run.sh"
+    ports:
+      - ${PORT:-8000}:${PORT:-8000}
+    volumes:
+      - .:/usr/src/app
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  staging:
+    container_name: bitlipa-staging-api
+    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-staging-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - ${PORT:-8000}:${PORT:-8000}
+    volumes:
+      - .:/usr/src/app
+    restart: unless-stopped
+
+  prod:
+    container_name: bitlipa-prod-api
+    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-prod-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - ${PORT:-8000}:${PORT:-8000}
+    volumes:
+      - .:/usr/src/app
+    restart: unless-stopped
