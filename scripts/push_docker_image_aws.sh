@@ -26,7 +26,7 @@ done
 
 region=${region-"eu-central-1"}
 registry=${registry-"931829732782.dkr.ecr.eu-central-1.amazonaws.com"}
-image=${image-"bitlipa-prod-api"}
+image=${image-"bitlipa-api"}
 tag=${tag-"latest"}
 
 aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $registry

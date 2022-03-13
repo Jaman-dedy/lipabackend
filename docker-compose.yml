@@ -14,7 +14,7 @@ services:
       - 5432:5432
   dev:
     container_name: bitlipa-dev-api
-    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-dev-api:${TAG:-latest}
+    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-api:${TAG:-latest}
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -29,7 +29,7 @@ services:
 
   staging:
     container_name: bitlipa-staging-api
-    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-staging-api:${TAG:-latest}
+    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-api:${TAG:-latest}
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -41,7 +41,7 @@ services:
 
   prod:
     container_name: bitlipa-prod-api
-    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-prod-api:${TAG:-latest}
+    image: ${DOCKER_REGISTRY:-bitlipa}/bitlipa-api:${TAG:-latest}
     build:
       context: .
       dockerfile: ./Dockerfile
