@@ -17,13 +17,16 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-echo
-name=${name-"bitlipa-api"}
-nsp=${nsp-"default"}
+
+name=${name:-"bitlipa-api"}
+nsp=${nsp:-"default"}
+region_name=${region_name:-"eu-central-1"}
+secret_name=${secret_name:-"arn:aws:secretsmanager:eu-central-1:931829732782:secret:bitlipa-api-secrets-Cfnp2a"}
 
 cd $(dirname "$0")/bitlipa-api/
-helm delete $name -n $nsp
-helm install $name . -n $nsp
 
-SERVICE_IP=$(kubectl get svc --namespace default bitlipa-api --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+helm delete $name -n $nsp
+helm install --set regionName=$region_name --set secretName=$secret_name $name . -n $nsp
+
+SERVICE_IP=$(kubectl get svc --namespace $nsp $name --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
 echo "SERVICE_IP: $SERVICE_IP"

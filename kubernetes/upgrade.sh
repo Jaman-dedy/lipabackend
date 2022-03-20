@@ -24,5 +24,5 @@ nsp=${nsp-"default"}
 cd $(dirname "$0")/bitlipa-api/
 helm upgrade $name -f values.yaml . -n $nsp
 
-SERVICE_IP=$(kubectl get svc --namespace default bitlipa-api --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+SERVICE_IP=$(kubectl get svc --namespace $nsp $name --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
 echo "SERVICE_IP: $SERVICE_IP"

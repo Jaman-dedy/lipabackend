@@ -7,6 +7,8 @@ autopep8==1.5.7
 Babel==2.9.1
 billiard==3.6.4.0
 blessed==1.18.1
+boto3==1.21.22
+botocore==1.24.22
 CacheControl==0.12.6
 cachetools==4.2.2
 certifi==2021.5.30
@@ -54,6 +56,7 @@ httplib2==0.19.1
 humanfriendly==9.2
 identify==2.2.10
 idna==2.10
+jmespath==1.0.0
 kafka-python==1.4.6
 kombu==5.1.0
 Markdown==3.3.4
@@ -66,6 +69,7 @@ pre-commit==2.13.0
 prompt-toolkit==3.0.19
 proto-plus==1.19.0
 protobuf==3.18.0
+psycopg2==2.8.6
 py-log==2.5
 py-moneyed==1.2
 pyasn1==0.4.8
@@ -83,6 +87,7 @@ PyYAML==5.4.1
 redis==3.5.3
 requests==2.25.1
 rsa==4.7.2
+s3transfer==0.5.2
 six==1.16.0
 sqlparse==0.4.1
 toml==0.10.2
@@ -95,4 +100,3 @@ vine==5.0.0
 virtualenv==20.4.7
 wcwidth==0.2.5
 whitenoise==5.2.0
-psycopg2-binary>=2.8
