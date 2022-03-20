@@ -7,12 +7,11 @@ from django.conf import settings
 from bitlipa.resources.events import GENERAL
 
 
-service_account = eval(settings.FIREBASE_SERVICE_ACCOUNT)
-cred = credentials.Certificate(service_account)
-app = firebase_admin.initialize_app(cred)
-
-
 def send_notification(tokens, event_type, data):
+    service_account = eval(settings.FIREBASE_SERVICE_ACCOUNT)
+    cred = credentials.Certificate(service_account)
+    app = firebase_admin.initialize_app(cred)
+
     notification_data = {
         **data,
         'event_type': event_type or GENERAL,
