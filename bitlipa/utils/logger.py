@@ -1,7 +1,7 @@
 import logging
 import coloredlogs
 
-from bitlipa.utils.get_object_attr import get_object_attr
+from .get_object_attr import get_object_attr
 
 
 def logger(data=None, type=None):
