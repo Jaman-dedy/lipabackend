@@ -11,16 +11,22 @@ def get_aws_secrets():
     coloredlogs.install(logger=logger)
 
     env = os.environ.get("ENV")
-    region_name = os.environ.get("REGION_NAME")
-    secret_name = os.environ.get("SECRET_NAME")
+    aws_region_name = os.environ.get("AWS_REGION_NAME")
+    aws_access_key_id = os.environ.get("AWS_ACCESS_KEY")
+    aws_secret_access_key = os.environ.get("AWS_SECRET_KEY")
+    aws_secret_name = os.environ.get("AWS_SECRET_NAME")
 
     env_file = f'.env.{env}' if env else '.env'
 
-    session = boto3.session.Session()
-    client = session.client(service_name='secretsmanager', region_name=region_name)
+    client = boto3.client(
+        service_name='secretsmanager',
+        region_name=aws_region_name,
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+    )
 
     try:
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+        get_secret_value_response = client.get_secret_value(SecretId=aws_secret_name)
     except ClientError as e:
         if e.response['Error']['Code'] == 'DecryptionFailureException'\
                 or e.response['Error']['Code'] == 'InternalServiceErrorException'\

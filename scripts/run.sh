@@ -20,15 +20,17 @@ done
 
 env=${env-"dev"}
 
+if [[ $env == "staging" ]]; then
+  ENV=staging python3 ./get_aws_secrets.py
+fi
+
 if [[ $env == "prod" ]] || [[ $env == "production" ]]; then
-  ENV=prod python3 ./bitlipa/get_aws_secrets.py
+  ENV=prod python3 ./get_aws_secrets.py
 fi
 
 if [[ -f "$(dirname "$0")/../.env.$env" ]]; then
   cat $(dirname "$0")/../.env.$env >$(dirname "$0")/../.env
 fi
-
-cat .env
 
 if [[ $port == "" ]]; then
   port=$(grep -w .env -e 'PORT' | sed 's/PORT=//' | grep -v "#")
