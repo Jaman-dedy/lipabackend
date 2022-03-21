@@ -9,7 +9,10 @@ from bitlipa.utils.get_object_attr import get_object_attr
 from bitlipa.utils.remove_dict_none_values import remove_dict_none_values
 from bitlipa.utils.to_int import to_int
 from bitlipa.utils.send_sms import send_sms
-from bitlipa.utils.firebase_messaging import send_notification as send_push_notification
+from bitlipa.utils.firebase_messaging import PushNotification
+
+push_notification = PushNotification()
+push_notification.initialize_app()
 
 
 class NotificationsManager(models.Manager):
@@ -82,7 +85,7 @@ class NotificationsManager(models.Manager):
                     'image': kwargs.get('content').get('image') or kwargs.get('image_url'),
                     'payload': kwargs.get('content').get('payload'),
                 }
-                send_push_notification(receivers, kwargs.get('content').get('event_type'), data)
+                push_notification.send(receivers, kwargs.get('content').get('event_type'), data)
 
         for recipient in (recipients if len(recipients) else [None]):
             notification = self.model()
