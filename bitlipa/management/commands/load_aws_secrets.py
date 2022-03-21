@@ -10,7 +10,6 @@ class Command(BaseCommand):
     help = "Load AWS secrets."
 
     def handle(self, *args, **options):
-        env = os.environ.get("ENV", default="prod")
         region_name = os.environ.get("REGION_NAME")
         secret_name = os.environ.get("SECRET_NAME")
 
@@ -32,12 +31,12 @@ class Command(BaseCommand):
             if 'SecretString' in get_secret_value_response:
                 secret = get_secret_value_response['SecretString']
                 if secret:
-                    with open(f'.env.{env}', 'w+') as f:
+                    with open('.env', 'w+') as f:
                         f.write(secret)
                         f.close()
             else:
                 decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
                 if secret:
-                    with open(f'.env.{env}', 'w+') as f:
+                    with open('.env', 'w+') as f:
                         f.write(decoded_binary_secret)
                         f.close()
