@@ -8,18 +8,6 @@ while [ $# -gt 0 ]; do
   --nsp=*)
     nsp="${1#*=}"
     ;;
-  --aws_region_name=*)
-    aws_region_name="${1#*=}"
-    ;;
-  --aws_access_key=*)
-    aws_access_key="${1#*=}"
-    ;;
-  --aws_secret_key=*)
-    aws_secret_key="${1#*=}"
-    ;;
-  --aws_secret_name=*)
-    aws_secret_name="${1#*=}"
-    ;;
   --dry_run=*)
     dry_run="${1#*=}"
     ;;
@@ -35,8 +23,11 @@ done
 
 name=${name:-"bitlipa-api"}
 nsp=${nsp:-"default"}
-aws_region_name=${aws_region_name:-"eu-central-1"}
-aws_secret_name=${aws_secret_name:-"arn:aws:secretsmanager:eu-central-1:931829732782:secret:bitlipa-api-secrets-Cfnp2a"}
+
+aws_region_name=$(grep -w $(dirname "$0")/.env -e 'AWS_REGION_NAME' | sed 's/AWS_REGION_NAME=//' | grep -v "#")
+aws_access_key=$(grep -w $(dirname "$0")/.env -e 'AWS_ACCESS_KEY' | sed 's/AWS_ACCESS_KEY=//' | grep -v "#")
+aws_secret_key=$(grep -w $(dirname "$0")/.env -e 'AWS_SECRET_KEY' | sed 's/AWS_SECRET_KEY=//' | grep -v "#")
+aws_secret_name=$(grep -w $(dirname "$0")/.env -e 'AWS_SECRET_NAME' | sed 's/AWS_SECRET_NAME=//' | grep -v "#")
 
 if [[ "$aws_access_key" == "" ]] || [[ "$aws_secret_key" == "" ]]; then
   echo "***************************\n"

@@ -14,10 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path, include
 
 
 urlpatterns = [
+    path('', lambda r: HttpResponse("<html><body><h1>BitLipa</h1></body></html>")),
     path('admin/', admin.site.urls),
     path('api/v1/', include('bitlipa.apps.urls')),
 ]
