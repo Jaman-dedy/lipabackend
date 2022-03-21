@@ -34,15 +34,25 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: "REGION_NAME"
+            - name: "AWS_REGION_NAME"
               valueFrom:
                 secretKeyRef:
-                  key:  regionName
+                  key:  AWS_REGION_NAME
                   name: {{ .Release.Name }}-secrets
-            - name: "SECRET_NAME"
+            - name: "AWS_ACCESS_KEY"
               valueFrom:
                 secretKeyRef:
-                  key:  secretName
+                  key:  AWS_ACCESS_KEY
+                  name: {{ .Release.Name }}-secrets
+            - name: "AWS_SECRET_KEY"
+              valueFrom:
+                secretKeyRef:
+                  key:  AWS_SECRET_KEY
+                  name: {{ .Release.Name }}-secrets
+            - name: "AWS_SECRET_NAME"
+              valueFrom:
+                secretKeyRef:
+                  key:  AWS_SECRET_NAME
                   name: {{ .Release.Name }}-secrets
           ports:
             - name: http

@@ -3,8 +3,11 @@
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
-regionName: "eu-central-1"
-secretName: ""
+
+AWS_REGION_NAME: ""
+AWS_ACCESS_KEY: ""
+AWS_SECRET_KEY: ""
+AWS_SECRET_NAME: ""
 
 image:
   repository: 931829732782.dkr.ecr.eu-central-1.amazonaws.com/bitlipa-api
