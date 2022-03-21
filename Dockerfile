@@ -5,6 +5,8 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR  /usr/src/app
 
+RUN  apt-get update && apt-get install gcc libpq-dev python-dev -y
+
 COPY . .
 
 RUN pip3 install -r requirements.txt
