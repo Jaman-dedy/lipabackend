@@ -20,6 +20,11 @@ done
 
 env=${env-"dev"}
 
+if [[ $env == "prod" ]] || [[ $env == "production" ]]; then
+  python3 manage.py load_aws_secrets
+  cat .env
+fi
+
 if [[ -f "$(dirname "$0")/../.env.$env" ]]; then
   cat $(dirname "$0")/../.env.$env >$(dirname "$0")/../.env
 fi
@@ -37,10 +42,9 @@ python3 manage.py runapscheduler &
 python3 manage.py collectstatic --noinput
 
 if [[ $env == "prod" ]] || [[ $env == "production" ]]; then
-  python3 manage.py load_aws_secrets
-  gunicorn bitlipa.wsgi --bind 0.0.0.0:${port:-8000} --preload --log-file -
+  # gunicorn bitlipa.wsgi --bind 0.0.0.0:${port:-8000} --preload --log-file -
 else
   python3 manage.py runserver 0.0.0.0:${port:-8000}
 fi
 
-python3 manage.py stopapscheduler
+# python3 manage.py stopapscheduler
