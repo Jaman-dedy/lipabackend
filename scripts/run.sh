@@ -37,7 +37,7 @@ python3 manage.py runapscheduler &
 python3 manage.py collectstatic --noinput
 
 if [[ $env == "prod" ]] || [[ $env == "production" ]]; then
-  ENV=prod python3 manage.py load_aws_secrets
+  python3 manage.py load_aws_secrets
   gunicorn bitlipa.wsgi --bind 0.0.0.0:${port:-8000} --preload --log-file -
 else
   python3 manage.py runserver 0.0.0.0:${port:-8000}

@@ -8,6 +8,9 @@ while [ $# -gt 0 ]; do
   --nsp=*)
     nsp="${1#*=}"
     ;;
+  --dry_run=*)
+    dry_run="${1#*=}"
+    ;;
   *)
     printf "***************************\n"
     printf "* Invalid argument (${1}).\n"
@@ -25,8 +28,12 @@ secret_name=${secret_name:-"arn:aws:secretsmanager:eu-central-1:931829732782:sec
 
 cd $(dirname "$0")/bitlipa-api/
 
-helm delete $name -n $nsp
-helm install --set regionName=$region_name --set secretName=$secret_name $name . -n $nsp
+if [[ "$dry_run" == "y" ]] || [[ "$dry_run" == "yes" ]]; then
+  helm install --dry-run --set regionName=$region_name --set secretName=$secret_name --debug $name . -n $nsp
+else
+  helm delete $name -n $nsp
+  helm install --set regionName=$region_name --set secretName=$secret_name $name . -n $nsp
+fi
 
 SERVICE_IP=$(kubectl get svc --namespace $nsp $name --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
 echo "SERVICE_IP: $SERVICE_IP"
