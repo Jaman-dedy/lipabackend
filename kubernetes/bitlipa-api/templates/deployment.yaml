@@ -60,13 +60,15 @@ spec:
               protocol: TCP
           livenessProbe:
             initialDelaySeconds: 90
+            periodSeconds: 30
             httpGet:
-              path: /
+              path: /home
               port: http
           readinessProbe:
             initialDelaySeconds: 90
+            periodSeconds: 30
             httpGet:
-              path: /
+              path: /home
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

@@ -20,6 +20,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path('', lambda r: HttpResponse("<html><body><h1>BitLipa</h1></body></html>")),
+    path('home', lambda r: HttpResponse("<html><body><h1>BitLipa</h1></body></html>")),
+    path('home/', lambda r: HttpResponse("<html><body><h1>BitLipa</h1></body></html>")),
     path('admin/', admin.site.urls),
     path('api/v1/', include('bitlipa.apps.urls')),
 ]
