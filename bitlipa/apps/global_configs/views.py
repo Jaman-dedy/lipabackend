@@ -29,7 +29,7 @@ class GlobalConfigViewSet(viewsets.ViewSet):
         return http_response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def list_global_configs(self, request):
-        AuthUtil.is_auth(request, is_admin=True)
+        AuthUtil.is_auth(request)
         kwargs = {
             'page': str(request.GET.get('page')),
             'per_page': str(request.GET.get('per_page')),
@@ -41,7 +41,7 @@ class GlobalConfigViewSet(viewsets.ViewSet):
 
     # get one global_config
     def retrieve(self, request, pk=None):
-        AuthUtil.is_auth(request, is_admin=True)
+        AuthUtil.is_auth(request)
 
         if pk and not is_valid_uuid(pk):
             return http_response(status=status.HTTP_404_NOT_FOUND, message=error_messages.NOT_FOUND.format('global config '))
