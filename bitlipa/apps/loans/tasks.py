@@ -22,5 +22,5 @@ def update_loan_wallets_balance():
     Loan.objects.bulk_update(loans, ['updated_at'])
 
     if settings.DEBUG is True:
-        logger(f'update loan wallets balance: {len(fiat_wallets)}', 'info')
+        # logger(f'update loan wallets balance: {len(fiat_wallets)}', 'info')
         return

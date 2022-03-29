@@ -10,7 +10,7 @@ from .models import CurrencyExchange
 
 def update_exchange_rates(force_update=False):
     if force_update is False and settings.DEBUG is True:
-        logger('update exchange rates', 'info')
+        # logger('update exchange rates', 'info')
         return
 
     response = http_request(
@@ -24,7 +24,7 @@ def update_exchange_rates(force_update=False):
     )
 
     if not status.is_success(response.status_code):
-        logger(str(response.json()), 'info')
+        # logger(str(response.json()), 'info')
         return response.json()
 
     (result, exchange_rates) = (response.json(), [])
