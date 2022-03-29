@@ -63,6 +63,10 @@ FIREBASE_SERVICE_ACCOUNT = env('FIREBASE_SERVICE_ACCOUNT', default='')
 ENIGMA_API_URL = env('ENIGMA_API_URL', default='')
 ENIGMA_USERNAME = env('ENIGMA_USERNAME', default='')
 ENIGMA_PASSWORD = env('ENIGMA_PASSWORD', default='')
+# M_PESA
+M_PESA_API = env('M_PESA_API', default="")
+M_PESA_USERNAME = env('M_PESA_USERNAME', default="")
+M_PESA_SECRET = env('M_PESA_SECRET', default="")
 
 # Application definition
 INSTALLED_APPS = [
@@ -98,6 +102,7 @@ INSTALLED_APPS = [
     'bitlipa.apps.user_settings',
     'bitlipa.apps.phones',
     'bitlipa.apps.loans',
+    'bitlipa.apps.mpesa_auth',
 ]
 
 MIDDLEWARE = [

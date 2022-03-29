@@ -59,7 +59,7 @@ class TransactionViewSet(viewsets.ViewSet):
     @action(methods=['post'], detail=False, url_path='confirm', url_name='confirm_transaction')
     def confirm_transaction(self, request):
         # TODO: Remove logs
-        logger(request.data, 'info')
+        # logger(request.data, 'info')
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
     @action(methods=['post'], detail=False, url_path='callback', url_name='create_or_update_crypto_transaction')
@@ -71,7 +71,7 @@ class TransactionViewSet(viewsets.ViewSet):
     @db_transaction.atomic
     def create_topup_transaction(self, request):
         # TODO: Remove logs
-        logger(request.data, 'info')
+        # logger(request.data, 'info')
         TransactionSerializer(Transaction.objects.create_topup_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 
@@ -79,7 +79,7 @@ class TransactionViewSet(viewsets.ViewSet):
     @db_transaction.atomic
     def update_withdraw_transaction(self, request):
         # TODO: Remove logs
-        logger(request.data, 'info')
+        # logger(request.data, 'info')
         TransactionSerializer(Transaction.objects.update_withdraw_transaction(**request.data))
         return HttpResponse(status=status.HTTP_200_OK, content='OK')
 

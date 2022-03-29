@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
 from rest_framework.decorators import action
 
 from .models import CurrencyExchange
@@ -8,6 +9,11 @@ from bitlipa.utils.http_response import http_response
 from bitlipa.resources import error_messages
 from bitlipa.utils.auth_util import AuthUtil
 from .tasks import update_exchange_rates
+
+# api_key='d2cXIfAXzL7oMWf6W1hOeHeOW5YBQ64zV3ZVxdg5t2ELs3dlVr2FgIZDINMKWmX9'
+# api_secret='RCPq5jvJ5gRkdbcKmpHXqoQ4ajrAIEiP1KrUwPNz728FWR0knpYMforhB9QhBj4E'
+api_key='dddd'
+api_secret='ddd'
 
 
 class CurrencyExchangeViewSet(viewsets.ViewSet):
@@ -85,7 +91,23 @@ class CurrencyExchangeViewSet(viewsets.ViewSet):
     def convert(self, request):
         AuthUtil.is_auth(request)
         currency_exchange = CurrencyExchange.objects.convert(**request.data)
+
         return http_response(status=status.HTTP_200_OK, data=currency_exchange)
+
+    @action(methods=['post'], detail=False, url_path='exchange', url_name='exchange')
+    def exchange(self, request):
+        AuthUtil.is_auth(request)
+        client = Client(api_key, api_secret)
+        currency_exchange = CurrencyExchange.objects.convert(**request.data)
+        
+        order = client.create_order(
+            symbol='BTCUSDT',
+            side=Client.SIDE_SELL,
+            type=Client.ORDER_TYPE_MARKET,
+            quantity=0.00024,
+        )
+
+        return http_response(status=status.HTTP_200_OK, data=order)
 
     @action(methods=['put'], detail=False, url_path='update-rates', url_name='update_rates')
     def update_rates(self, request):

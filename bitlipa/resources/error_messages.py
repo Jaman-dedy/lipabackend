@@ -32,3 +32,6 @@ SAME_SOURCE_TARGET_WALLET = "The source and target wallet can not be the same"
 
 # fees
 INVALID_FEE_TYPE = "fee type is invalid, types allowed are flat or percentage"
+
+# m-pesa
+M_PESA_TOKEN_EXPIRED='404.001.03'

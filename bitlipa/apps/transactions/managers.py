@@ -23,6 +23,11 @@ from bitlipa.apps.crypto_wallets.models import CryptoWallet
 from bitlipa.apps.fiat_wallets.models import FiatWallet
 from bitlipa.apps.fees.models import Fee
 from bitlipa.apps.currency_exchange.models import CurrencyExchange
+from bitlipa.utils.get_m_pesa_token import create_token
+from bitlipa.apps.mpesa_auth.models import MpesaAuth
+from bitlipa.utils.m_pesa_http import m_pesa_http
+from bitlipa.resources.error_messages import M_PESA_TOKEN_EXPIRED
+from bitlipa.apps.mpesa_auth.models import MpesaAuth
 
 
 class TransactionManager(models.Manager):
@@ -179,10 +184,10 @@ class TransactionManager(models.Manager):
     def topup_funds(self, user=None, **kwargs):
         REQUIRED_ERROR = error_messages.REQUIRED
         errors = {
-            'phonenumber': REQUIRED_ERROR.format('phonenumber is ') if not kwargs.get('phonenumber') else None,
-            'amount': REQUIRED_ERROR.format('amount is ') if not kwargs.get('amount') else None,
-            'currency': REQUIRED_ERROR.format('currency is ') if not kwargs.get('currency') else None,
-            'callback_url': REQUIRED_ERROR.format('callback_url is ') if not kwargs.get('callback_url') else None,
+            'PhoneNumber': REQUIRED_ERROR.format('PhoneNumber is ') if not kwargs.get('PhoneNumber') else None,
+            'Amount': REQUIRED_ERROR.format('amount is ') if not kwargs.get('Amount') else None,
+            # 'currency': REQUIRED_ERROR.format('currency is ') if not kwargs.get('currency') else None,
+            'CallBackURL': REQUIRED_ERROR.format('CallBackURL is ') if not kwargs.get('CallBackURL') else None,
             'metadata': REQUIRED_ERROR.format('metadata is ') if not kwargs.get('metadata') else None
         }
 
@@ -190,8 +195,8 @@ class TransactionManager(models.Manager):
         errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if metadata.get('tx_fee') is None else None
         errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if metadata.get('fx_fee') is None else None
         errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if metadata.get('fx_rate') is None else None
-        errors['source_currency'] = REQUIRED_ERROR.format('source currency is ') if not metadata.get('source_currency') else None
-        errors['target_currency'] = REQUIRED_ERROR.format('target currency is ') if not metadata.get('target_currency') else None
+        # errors['source_currency'] = REQUIRED_ERROR.format('source currency is ') if not metadata.get('source_currency') else None
+        # errors['target_currency'] = REQUIRED_ERROR.format('target currency is ') if not metadata.get('target_currency') else None
         errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if metadata.get('source_amount') is None else None
         errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if metadata.get('source_total_amount') is None else None
         errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if metadata.get('target_amount') is None else None
@@ -200,31 +205,35 @@ class TransactionManager(models.Manager):
             raise ValidationError(str(errors))
 
         payload = {
-            'phonenumber': kwargs.get('phonenumber'),
-            'amount': metadata.get('source_total_amount'),
-            'currency': metadata.get('source_currency'),
-            'description': metadata.get('description'),
-            'callback_url': kwargs.get('callback_url'),
+            'BusinessShortCode': kwargs.get('BusinessShortCode'),
+            'Timestamp': kwargs.get('Timestamp'),
+            'Amount': kwargs.get('Amount'),
+            'Password': kwargs.get('Password'),
+            'PartyA': kwargs.get('PartyA'),
+            'PartyB': kwargs.get('PartyB'),
+            'PhoneNumber': kwargs.get('PhoneNumber'),
+            'TransactionDesc': kwargs.get('TransactionDesc'),
+            'AccountReference': kwargs.get('AccountReference'),
+            'CallBackURL': kwargs.get('CallBackURL'),
+            'TransactionType': kwargs.get('TransactionType'),
             'metadata': kwargs.get('metadata', {}),
-            'send_instructions': kwargs.get('send_instructions')
         }
 
         payload = json.dumps(payload)
-
-        response = http_request(
-            url=f'{settings.BEYONIC_API}/collectionrequests',
-            method='POST',
-            data=payload,
-            headers={
-                'Authorization': f'Token {settings.BEYONIC_API_TOKEN}',
-                'Content-Type': 'application/json'
-            }
-        )
+        access_token = MpesaAuth.objects.values('access_token')[0]
+        url='/mpesa/stkpush/v1/processrequest'
+        method="POST"
+        response = m_pesa_http(url, method, payload, access_token.get('access_token'))
+        res = response.json()
+        if res.get('errorCode') == M_PESA_TOKEN_EXPIRED:
+            MpesaAuth.objects.all().delete()
+            create_token()
+            response = m_pesa_http(url, method, payload, access_token.get('access_token'))
 
         if not status.is_success(response.status_code):
-            raise ValidationError(str(response.json()))
-
-        return response.json()
+            raise ValidationError(str(res))
+ 
+        return res
 
     def beyonic_withdraw(self, **kwargs):
         transaction = self.model()
@@ -362,26 +371,27 @@ class TransactionManager(models.Manager):
     def create_topup_transaction(self, **kwargs):
         REQUIRED_ERROR = error_messages.REQUIRED
         errors = {}
+        print('===++---****', kwargs)
         data = kwargs.get('data') if isinstance(kwargs.get('data'), dict) else {}
         metadata = data.get('metadata') if isinstance(data.get('metadata'), dict) else {}
 
-        errors['data'] = REQUIRED_ERROR.format('data is ') if not kwargs.get('data') or not isinstance(kwargs.get('data'), dict) else None
-        errors['event'] = REQUIRED_ERROR.format('event is ') if not kwargs.get('event') else None
-        errors['metadata'] = REQUIRED_ERROR.format('metadata is ') if not data.get('metadata') else None
-        errors['id'] = REQUIRED_ERROR.format('id is ') if not data.get('id') else None
-        errors['wallet_id'] = REQUIRED_ERROR.format('wallet id is ') \
-            if not (metadata.get('crypto_wallet_id') or metadata.get('fiat_wallet_id')) else None
-        errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if metadata.get('tx_fee') is None else None
-        errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if metadata.get('fx_fee') is None else None
-        errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if metadata.get('fx_rate') is None else None
-        errors['source_currency'] = REQUIRED_ERROR.format('source currency is ') if not metadata.get('source_currency') else None
-        errors['target_currency'] = REQUIRED_ERROR.format('target currency is ') if not metadata.get('target_currency') else None
-        errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if metadata.get('source_amount') is None else None
-        errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if metadata.get('source_total_amount') is None else None
-        errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if metadata.get('target_amount') is None else None
+        # errors['data'] = REQUIRED_ERROR.format('data is ') if not kwargs.get('data') or not isinstance(kwargs.get('data'), dict) else None
+        # errors['event'] = REQUIRED_ERROR.format('event is ') if not kwargs.get('event') else None
+        # errors['metadata'] = REQUIRED_ERROR.format('metadata is ') if not data.get('metadata') else None
+        # errors['id'] = REQUIRED_ERROR.format('id is ') if not data.get('id') else None
+        # errors['wallet_id'] = REQUIRED_ERROR.format('wallet id is ') \
+        #     if not (metadata.get('crypto_wallet_id') or metadata.get('fiat_wallet_id')) else None
+        # errors['tx_fee'] = REQUIRED_ERROR.format('fee is ') if metadata.get('tx_fee') is None else None
+        # errors['fx_fee'] = REQUIRED_ERROR.format('fx fee is ') if metadata.get('fx_fee') is None else None
+        # errors['fx_rate'] = REQUIRED_ERROR.format('fx rate is ') if metadata.get('fx_rate') is None else None
+        # errors['source_currency'] = REQUIRED_ERROR.format('source currency is ') if not metadata.get('source_currency') else None
+        # errors['target_currency'] = REQUIRED_ERROR.format('target currency is ') if not metadata.get('target_currency') else None
+        # errors['source_amount'] = REQUIRED_ERROR.format('source amount is ') if metadata.get('source_amount') is None else None
+        # errors['source_total_amount'] = REQUIRED_ERROR.format('source total amount is ') if metadata.get('source_total_amount') is None else None
+        # errors['target_amount'] = REQUIRED_ERROR.format('target amount is ') if metadata.get('target_amount') is None else None
 
-        if len(remove_dict_none_values(errors)) != 0:
-            raise ValidationError(str(errors))
+        # if len(remove_dict_none_values(errors)) != 0:
+        #     raise ValidationError(str(errors))
 
         tx_state = data.get("state") or data.get("status")
         tx_id = data.get('id')
