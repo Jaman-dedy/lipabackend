@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    command: sh -c "./scripts/run.sh"
+    command: sh -c "pip3 install -r requirements.txt; ./scripts/run.sh"
     ports:
       - ${PORT:-8000}:${PORT:-8000}
     volumes:
