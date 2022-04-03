@@ -42,6 +42,7 @@ class TransactionLimitManager(models.Manager):
         transaction_limit.max_amount = kwargs.get('max_amount')
         transaction_limit.country = kwargs.get('country')
         transaction_limit.country_code = kwargs.get('country_code')
+        transaction_limit.frequency = kwargs.get('frequency')
         transaction_limit.description = kwargs.get('description')
 
         transaction_limit.save(using=self._db)
@@ -72,6 +73,7 @@ class TransactionLimitManager(models.Manager):
         transaction_limit.max_amount = kwargs.get('max_amount', transaction_limit.max_amount)
         transaction_limit.country = kwargs.get('country', transaction_limit.country)
         transaction_limit.country_code = kwargs.get('country_code', transaction_limit.country_code)
+        transaction_limit.frequency = kwargs.get('frequency', transaction_limit.frequency)
         transaction_limit.description = kwargs.get('description', transaction_limit.description)
 
         transaction_limit.save(using=self._db)

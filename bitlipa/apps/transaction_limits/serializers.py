@@ -13,6 +13,7 @@ class TransactionLimitSerializer(serializers.HyperlinkedModelSerializer):
                   'max_amount',
                   'country',
                   'country_code',
+                  'frequency',
                   'description',
                   'created_at',
                   'updated_at',
