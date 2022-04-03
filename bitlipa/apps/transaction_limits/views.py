@@ -38,6 +38,7 @@ class TransactionLimitSet(viewsets.ViewSet):
             'currency__iexact': request.GET.get('currency'),
             'country__iexact': request.GET.get('country'),
             'country_code__iexact': request.GET.get('country_code'),
+            'frequency__iexact': request.GET.get('frequency'),
         }
         result = TransactionLimit.objects.list(**kwargs)
         serializer = TransactionLimitSerializer(result.get('data'), many=True)
