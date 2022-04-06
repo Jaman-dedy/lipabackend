@@ -4,6 +4,7 @@ from bitlipa.apps.fiat_wallets.models import FiatWallet
 from bitlipa.resources import constants
 
 def topup_success (self, data, item_data, transaction, tx_state):
+    print('++++++++SUCCESS++++++++++', data)
     tx_crypto_wallet_id = ''
     tx_fiat_wallet_id = item_data[5].get('Value')
     # tx_fee = to_decimal(metadata.get('tx_fee'))
