@@ -37,7 +37,7 @@ class Transaction(models.Model):
     sender = models.ForeignKey(User, related_name='sender_id', verbose_name=_("sender"), on_delete=models.DO_NOTHING, null=True)
     receiver = models.ForeignKey(User, related_name='receiver_id', verbose_name=_("receiver"), on_delete=models.DO_NOTHING, null=True)
     type = models.CharField(verbose_name=_("transaction type"), max_length=30, blank=True, null=True)
-    wallet_id = models.CharField(verbose_name=_("wallet ID"), max_length=30, blank=True, null=True)
+    wallet_id = models.CharField(verbose_name=_("wallet ID"), max_length=100, blank=True, null=True)
     order_id = models.CharField(verbose_name=_("order ID"), max_length=30, blank=True, null=True)
     serial = models.CharField(verbose_name=_("serial number"), max_length=100, blank=True, null=True)
     vout_index = models.CharField(verbose_name=_("index of vout"), max_length=100, blank=True, null=True)
