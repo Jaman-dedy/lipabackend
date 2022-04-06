@@ -1,4 +1,5 @@
 def topup_failed (self, body, data, transaction):
+    print('******FAILURE********', body)
     source_currency = 'KES'
     transaction.state = self.model.ProcessingState.FAILED.label
     transaction.transaction_id = data.get('CheckoutRequestID')
