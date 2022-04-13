@@ -13,8 +13,7 @@ class TransactionLimit(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     currency = models.CharField(verbose_name=_("currency"), max_length=30, blank=True, null=True)
-    min_amount = models.DecimalField(verbose_name=_("min amount"), default=0, max_digits=19, decimal_places=4, blank=True, null=True)
-    max_amount = models.DecimalField(verbose_name=_("max amount"), max_digits=19, decimal_places=4, blank=True, null=True)
+    amount = models.DecimalField(verbose_name=_("amount"), default=0, max_digits=19, decimal_places=4, blank=True, null=True)
     country = models.CharField(verbose_name=_("country"), max_length=100, blank=True, null=True)
     country_code = models.CharField(verbose_name=_("country code"), max_length=6, blank=True, null=True)
     frequency = models.CharField(verbose_name=_("frequency"),
@@ -38,6 +37,6 @@ class TransactionLimit(models.Model):
         ordering = ("created_at", "updated_at")
         constraints = [
             models.UniqueConstraint(
-                fields=['currency', 'min_amount', 'max_amount', 'country', 'country_code'],
+                fields=['currency', 'amount', 'country', 'country_code'],
                 name='unique_transaction_limit')
         ]
