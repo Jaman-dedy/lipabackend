@@ -32,14 +32,13 @@ class TransactionLimitManager(models.Manager):
 
     def create_transaction_limit(self, **kwargs):
         (transaction_limit, errors) = (self.model(), {})
-        errors['max_amount'] = error_messages.REQUIRED.format('transaction limit max amount is ') if not kwargs.get('max_amount') else None
+        errors['amount'] = error_messages.REQUIRED.format('transaction limit amount is ') if not kwargs.get('amount') else None
 
         if len(remove_dict_none_values(errors)) != 0:
             raise ValidationError(str(errors))
 
         transaction_limit.currency = kwargs.get('currency')
-        transaction_limit.min_amount = kwargs.get('min_amount')
-        transaction_limit.max_amount = kwargs.get('max_amount')
+        transaction_limit.amount = kwargs.get('amount')
         transaction_limit.country = kwargs.get('country')
         transaction_limit.country_code = kwargs.get('country_code')
         transaction_limit.frequency = kwargs.get('frequency')
@@ -53,7 +52,7 @@ class TransactionLimitManager(models.Manager):
             transaction_limit = self.model.objects.get(**kwargs)
             return transaction_limit
         except self.model.DoesNotExist:
-            return self.model(min_amount=to_decimal(0), max_amount=to_decimal(0), )
+            return self.model(amount=to_decimal(0), )
 
     def update(self, id=None, **kwargs):
         errors = {}
@@ -69,8 +68,7 @@ class TransactionLimitManager(models.Manager):
             raise ValidationError(str(errors))
 
         transaction_limit.currency = kwargs.get('currency', transaction_limit.currency)
-        transaction_limit.min_amount = kwargs.get('min_amount', transaction_limit.min_amount)
-        transaction_limit.max_amount = kwargs.get('max_amount', transaction_limit.max_amount)
+        transaction_limit.amount = kwargs.get('amount', transaction_limit.amount)
         transaction_limit.country = kwargs.get('country', transaction_limit.country)
         transaction_limit.country_code = kwargs.get('country_code', transaction_limit.country_code)
         transaction_limit.frequency = kwargs.get('frequency', transaction_limit.frequency)

@@ -9,8 +9,7 @@ class TransactionLimitSerializer(serializers.HyperlinkedModelSerializer):
         model = TransactionLimit
         fields = ['id',
                   'currency',
-                  'min_amount',
-                  'max_amount',
+                  'amount',
                   'country',
                   'country_code',
                   'frequency',
