@@ -37,6 +37,6 @@ class TransactionLimit(models.Model):
         ordering = ("created_at", "updated_at")
         constraints = [
             models.UniqueConstraint(
-                fields=['currency', 'amount', 'country', 'country_code'],
+                fields=['currency', 'amount', 'country', 'country_code', 'frequency'],
                 name='unique_transaction_limit')
         ]

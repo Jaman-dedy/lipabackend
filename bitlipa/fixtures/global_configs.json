@@ -44,8 +44,8 @@
       "name": "KYC tiers",
       "_data": {
         "tier_1": {
-          "limit": "3000",
-          "currency": "USD",
+          "limit": "300000",
+          "currency": "KES",
           "requirements": [
             "email",
             "phone"
@@ -53,8 +53,8 @@
           "frequency": "daily"
         },
         "tier_2": {
-          "limit": "10000",
-          "currency": "USD",
+          "limit": "1000000",
+          "currency": "KES",
           "documents": [
             "ID",
             "PASSPORT",
@@ -63,8 +63,8 @@
           "frequency": "daily"
         },
         "tier_3": {
-          "limit": "1000000",
-          "currency": "USD",
+          "limit": "100000000",
+          "currency": "KES",
           "requirements": [
             "company's certificate"
           ],

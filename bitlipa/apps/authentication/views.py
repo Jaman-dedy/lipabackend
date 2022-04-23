@@ -13,6 +13,7 @@ from bitlipa.utils.jwt_util import JWTUtil
 from bitlipa.apps.fiat_wallets.models import FiatWallet
 from bitlipa.apps.fiat_wallets.serializers import FiatWalletSerializer
 from bitlipa.apps.users.models import User
+from bitlipa.apps.transactions.models import Transaction
 from bitlipa.apps.users.serializers import UserSerializer
 from bitlipa.apps.phones.serializers import PhoneSerializer
 from bitlipa.resources import error_messages
@@ -43,9 +44,7 @@ class AuthViewSet(viewsets.ViewSet):
 
         email_token = JWTUtil.encode({"email": email, "from_email": True}, exp_hours=24)
         link = f'{request.data.get("redirect_link") or settings.API_URL}/auth/verify-email/{email_token}/'
-        content = loader.render_to_string('verify_email.html', {
-            'link': link
-        })
+        content = loader.render_to_string('verify_email.html', {'link': link})
         send_mail('Verify account', '', settings.EMAIL_SENDER, [email], False, html_message=content)
         return http_response(status=status.HTTP_201_CREATED, message=success_messages.EMAIL_SENT, data={
             "token": JWTUtil.encode({"email": email}, exp_hours=24),
@@ -81,7 +80,7 @@ class AuthViewSet(viewsets.ViewSet):
         data = User.objects.save_or_verify_phonenumber(email=request.decoded_token.get('email'), **request.data)
         if request.data.get('secondary'):
             serializer = PhoneSerializer(data)
-        else : 
+        else :
             serializer = UserSerializer(data)
         return http_response(status=status.HTTP_200_OK, message=success_messages.SUCCESS, data=serializer.data)
 
@@ -109,7 +108,8 @@ class AuthViewSet(viewsets.ViewSet):
                 "is_otp_required": True,
                 "message": success_messages.CONFIRM_LOGIN
             })
-        serializer = UserSerializer(user, context={'include_wallets': True, 'request': request})
+        Transaction.objects.calculate_user_tx_total_amount(user)
+        serializer = UserSerializer(user, context={'include_wallets': True})
         user_token = JWTUtil.encode({"email": user.email, "phonenumber": user.phonenumber}, exp_hours=24)
 
         if not len(serializer.data.get('fiat_wallets')):
@@ -119,7 +119,6 @@ class AuthViewSet(viewsets.ViewSet):
                     "user": {**serializer.data, 'fiat_wallets': [FiatWalletSerializer(fiat_wallet).data]},
                     "token": user_token
                 })
-
         return http_response(status=status.HTTP_200_OK, data={"user": serializer.data, "token": user_token})
 
     @action(methods=['post'], detail=False, url_path='admin/login', url_name='admin/login')
@@ -138,7 +137,10 @@ class AuthViewSet(viewsets.ViewSet):
     def refresh_token(self, request, *args, **kwargs):
         decoded_token = JWTUtil.decode(kwargs.get('token'), options={"verify_exp": False})
         decoded_token.pop('exp', None)
-        return http_response(status=status.HTTP_200_OK, data={"token": JWTUtil.encode(decoded_token)})
+        user = User.objects.get(email__iexact=decoded_token.get('email'))
+        Transaction.objects.calculate_user_tx_total_amount(user)
+        serializer = UserSerializer(user)
+        return http_response(status=status.HTTP_200_OK, data={"user": serializer.data, "token": JWTUtil.encode(decoded_token)})
 
     def send_reset_pin_or_password_link(self, field_to_reset, request):
         if not request.data.get('email'):
