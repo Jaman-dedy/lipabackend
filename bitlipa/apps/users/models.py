@@ -26,12 +26,13 @@ class User(models.Model):
     device_id = models.CharField(verbose_name=_("Device id"), max_length=30, blank=True, null=True)
     firebase_token = models.CharField(verbose_name=_("Firebase token"), max_length=255, blank=True, null=True)
     picture_url = models.CharField(verbose_name=_("Profile picture"), max_length=255, blank=True, null=True)
-    document_type = models.CharField(verbose_name=_("Document type"),
-                                     max_length=10,
-                                     choices=DocumentTypes.choices,
-                                     default=DocumentTypes.ID,
-                                     blank=False,
-                                     null=False)
+    document_type = models.CharField(
+        verbose_name=_("Document type"),
+        max_length=10,
+        choices=DocumentTypes.choices,
+        default=DocumentTypes.ID,
+        blank=False,
+        null=False)
     document_front_url = models.CharField(verbose_name=_("Front side of ID or Passport"), max_length=255, blank=True, null=True)
     document_back_url = models.CharField(verbose_name=_("Back side of ID or Passport"), max_length=255, blank=True, null=True)
     selfie_picture_url = models.CharField(verbose_name=_("Selfie"), max_length=255, blank=True, null=True)
@@ -45,6 +46,27 @@ class User(models.Model):
     is_account_blocked = models.BooleanField(verbose_name="is account blocked", blank=False, null=False, default=False)
     last_wrong_login_attempt_date = models.DateTimeField(auto_now=False, verbose_name=_("last wrong login attempt date"), null=True)
     wrong_login_attempts_count = models.IntegerField(verbose_name=_("wrong login attempts count"), blank=False, null=False, default=0)
+    daily_tx_total_amount = models.DecimalField(
+        verbose_name=_("total amount of daily transactions"),
+        default=0,
+        max_digits=19,
+        decimal_places=4,
+        blank=True,
+        null=True)
+    weekly_tx_total_amount = models.DecimalField(
+        verbose_name=_("total amount of weekly transactions"),
+        default=0,
+        max_digits=19,
+        decimal_places=4,
+        blank=True,
+        null=True)
+    monthly_tx_total_amount = models.DecimalField(
+        verbose_name=_("total amount of monthly transactions"),
+        default=0,
+        max_digits=19,
+        decimal_places=4,
+        blank=True,
+        null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("updated at"))
     deleted_at = models.DateTimeField(auto_now=False, verbose_name=_("deleted at"), null=True)

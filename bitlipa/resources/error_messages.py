@@ -29,9 +29,10 @@ EMAIL_TAKEN = "user with this email{} already exists"
 INVALID_AMOUNT = "amount can not be a negative number or 0"
 INSUFFICIENT_FUNDS = "You do not have enough funds. Please top-up your wallet to perform this transaction"
 SAME_SOURCE_TARGET_WALLET = "The source and target wallet can not be the same"
+LIMIT_EXCEEDED = "{}limit exceeded"
 
 # fees
 INVALID_FEE_TYPE = "fee type is invalid, types allowed are flat or percentage"
 
 # m-pesa
-M_PESA_TOKEN_EXPIRED='404.001.03'
+M_PESA_TOKEN_EXPIRED = '404.001.03'

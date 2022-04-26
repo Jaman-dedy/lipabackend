@@ -3,12 +3,14 @@ from rest_framework import exceptions as drf_exceptions
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
+
 from .models import User
 from .serializers import BasicUserSerializer, UserSerializer
 from bitlipa.utils.is_valid_uuid import is_valid_uuid
 from bitlipa.utils.http_response import http_response
 from bitlipa.resources import error_messages
 from bitlipa.utils.auth_util import AuthUtil
+from bitlipa.apps.transactions.models import Transaction
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -60,7 +62,6 @@ class UserViewSet(viewsets.ViewSet):
         return http_response(status=status.HTTP_200_OK, data=serializer.data, meta=result.get('meta'))
 
     # get one user
-
     def retrieve(self, request, pk=None, **kwargs):
         AuthUtil.is_auth(request)
         user = None
@@ -78,8 +79,12 @@ class UserViewSet(viewsets.ViewSet):
 
         if not user and not is_valid_uuid(pk):
             raise drf_exceptions.NotFound(error_messages.NOT_FOUND.format('user '))
+
+        Transaction.objects.calculate_user_tx_total_amount(user)
+
         user_data = UserSerializer(user, context={'include_wallets': True}).data if user.id == request.user.id \
             else BasicUserSerializer(user, context={'include_wallets': True}).data
+
         return http_response(status=status.HTTP_200_OK, data=user_data)
 
     # update user

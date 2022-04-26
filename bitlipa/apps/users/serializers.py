@@ -51,12 +51,14 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                   'is_account_blocked',
                   'last_wrong_login_attempt_date',
                   'wrong_login_attempts_count',
+                  'daily_tx_total_amount',
+                  'weekly_tx_total_amount',
+                  'monthly_tx_total_amount',
                   'created_at',
                   'updated_at',
                   'deleted_at']
 
     def to_representation(self, instance):
-
         roles = []
         for role in UserRole.objects.filter(user=instance):
             roles.append(role.get_role())
@@ -65,6 +67,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             **super().to_representation(instance),
             'roles': roles
         }
+
         if get_object_attr(self, 'context', {}).get('include_wallets') is True:
             total_balance_in_local_currency = to_decimal(0)
             (fiat_wallets, crypto_wallets) = ([], [])
