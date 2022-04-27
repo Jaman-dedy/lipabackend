@@ -177,6 +177,7 @@ class TransactionManager(models.Manager):
         return transaction
 
     def topup_funds(self, user=None, **kwargs):
+        #Revamp to beyonic
         REQUIRED_ERROR = error_messages.REQUIRED
         errors = {
             'phonenumber': REQUIRED_ERROR.format('phonenumber is ') if not kwargs.get('phonenumber') else None,
