@@ -340,6 +340,7 @@ class TransactionManager(models.Manager):
 
     def update_withdraw_transaction(self, **kwargs):
         REQUIRED_ERROR = error_messages.REQUIRED
+        print('debug', kwargs)
         errors = {}
         data = kwargs.get('data') if isinstance(
             kwargs.get('data'), dict) else {}
